@@ -175,9 +175,15 @@ Two workflows, both building against the current Dalamud release on a Windows ru
   `latest.zip` as assets on a `v{version}` GitHub release. Because the manifest's download links use
   the `/releases/latest/download/` redirect, the repository URL above is permanent.
 
-To cut a new version for users, bump `<Version>` in `HealAssist.csproj` — the tag, the release and
-the `AssemblyVersion` Dalamud compares against all follow from it. Re-running without a bump just
-replaces the assets on the existing release, which will not prompt anyone to update.
+To cut a new version for users: bump `<Version>` in `HealAssist.csproj`, then push a matching tag.
+
+```
+git tag v1.1.0.0 && git push origin v1.1.0.0
+```
+
+The release job refuses to run if the tag and the csproj version disagree, so the release name and
+the `AssemblyVersion` Dalamud compares against cannot drift apart. Re-running without a version bump
+just replaces the assets on the existing release, which will not prompt anyone to update.
 
 If you build against an older Dalamud API level, the one thing that needs changing is `Svc.Me` in
 `HealAssist/Svc.cs` — `LocalPlayer` moved from `IClientState` to `IObjectTable` in API 14 and was

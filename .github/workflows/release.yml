@@ -2,6 +2,8 @@ name: Release
 
 on:
   push:
+    tags:
+      - 'v*'
     branches:
       - main
   workflow_dispatch:
@@ -88,6 +90,15 @@ jobs:
           $tag = "v$env:VERSION"
           $zip = "HealAssist/bin/Release/HealAssist/latest.zip"
           if (-not (Test-Path $zip)) { throw "Packager did not produce $zip" }
+
+          # A tag push must agree with the csproj, otherwise the release name and the
+          # AssemblyVersion Dalamud compares against would disagree.
+          if ($env:GITHUB_REF -like 'refs/tags/*') {
+            $pushed = $env:GITHUB_REF -replace '^refs/tags/', ''
+            if ($pushed -ne $tag) {
+              throw "Tag $pushed does not match <Version> $env:VERSION in HealAssist.csproj (expected $tag)"
+            }
+          }
 
           gh release view $tag 2>$null | Out-Null
           if ($LASTEXITCODE -eq 0) {
