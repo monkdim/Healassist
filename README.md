@@ -137,7 +137,7 @@ Requirements:
 
 - .NET SDK 10.0.101 or newer
 - XIVLauncher/Dalamud installed, so the SDK can find the Dalamud assemblies
-- Targets **Dalamud API 14** (`Dalamud.NET.Sdk/14.0.1`)
+- Targets **Dalamud API 15** (`Dalamud.NET.Sdk/15.0.0`)
 
 ```
 dotnet build -c Release
@@ -147,9 +147,13 @@ The built plugin lands in `HealAssist/bin/Release/HealAssist/`. To load it in ga
 under Dalamud Settings → Experimental → **Dev Plugin Locations**, then enable HealAssist in the
 plugin installer.
 
+Every push builds on CI (`.github/workflows/build.yml`) against the current Dalamud release on a
+Windows runner, and uploads the packaged plugin as a run artifact — so you can grab a built copy
+from the Actions tab without installing a toolchain at all.
+
 If you build against an older Dalamud API level, the one thing that needs changing is `Svc.Me` in
-`HealAssist/Svc.cs` — `LocalPlayer` moved from `IClientState` to `IObjectTable` in API 14. That is
-isolated to a single line on purpose.
+`HealAssist/Svc.cs` — `LocalPlayer` moved from `IClientState` to `IObjectTable` in API 14 and was
+removed from `IClientState` entirely in API 15. That is isolated to a single line on purpose.
 
 ### Project layout
 
