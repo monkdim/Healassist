@@ -147,9 +147,13 @@ The built plugin lands in `HealAssist/bin/Release/HealAssist/`. To load it in ga
 under Dalamud Settings → Experimental → **Dev Plugin Locations**, then enable HealAssist in the
 plugin installer.
 
+### Grabbing a build without a toolchain
+
 Every push builds on CI (`.github/workflows/build.yml`) against the current Dalamud release on a
-Windows runner, and uploads the packaged plugin as a run artifact — so you can grab a built copy
-from the Actions tab without installing a toolchain at all.
+Windows runner and uploads the result as a run artifact. Open the
+[Actions tab](https://github.com/monkdim/Healassist/actions), pick the latest green run, download
+the **HealAssist** artifact, unzip it somewhere permanent, and point Dev Plugin Locations at that
+folder. No .NET install needed.
 
 If you build against an older Dalamud API level, the one thing that needs changing is `Svc.Me` in
 `HealAssist/Svc.cs` — `LocalPlayer` moved from `IClientState` to `IObjectTable` in API 14 and was
