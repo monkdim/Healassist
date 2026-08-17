@@ -6,6 +6,9 @@ on:
       - 'v*'
     branches:
       - main
+      # This repository's default branch is currently the development branch, so releases
+      # are cut from it too. Drop this line once main is the default branch.
+      - 'claude/**'
   workflow_dispatch:
 
 # Both the plugin zip and the repository manifest are published as release assets, so
