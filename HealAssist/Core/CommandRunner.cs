@@ -18,7 +18,7 @@ public sealed class CommandRunner(Configuration config, PartyScanner scanner, Ta
         if (Svc.Me is null)
             return Report(PickResult.Fail(PickFailure.NotLoggedIn), "Raise");
 
-        var members = scanner.Scan(config.RaiseIncludeAlliance);
+        var members = scanner.Scan(config.RaiseIncludeAlliance, config.RaiseIncludeNearby);
         var result = picker.PickRaiseTarget(members);
 
         if (result.Target is null)
@@ -37,7 +37,7 @@ public sealed class CommandRunner(Configuration config, PartyScanner scanner, Ta
         if (Svc.Me is null)
             return Report(PickResult.Fail(PickFailure.NotLoggedIn), "Lowest HP");
 
-        var members = scanner.Scan(config.LowestIncludeAlliance);
+        var members = scanner.Scan(config.LowestIncludeAlliance, config.LowestIncludeNearby);
         var result = picker.PickLowestHpTarget(members);
 
         if (result.Target is null)
@@ -60,7 +60,10 @@ public sealed class CommandRunner(Configuration config, PartyScanner scanner, Ta
             return (none, none, []);
         }
 
-        var members = scanner.Scan(config.RaiseIncludeAlliance || config.LowestIncludeAlliance);
+        // The preview scans the union of both commands' sources; the picker filters per command.
+        var members = scanner.Scan(
+            config.RaiseIncludeAlliance || config.LowestIncludeAlliance,
+            config.RaiseIncludeNearby || config.LowestIncludeNearby);
         return (picker.PickRaiseTarget(members), picker.PickLowestHpTarget(members), members);
     }
 

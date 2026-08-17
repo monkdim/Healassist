@@ -19,13 +19,13 @@ public readonly record struct PickResult(PartyMemberInfo? Target, PickFailure Fa
     public bool Success => Target is not null;
 }
 
-/// <summary>Turns a party snapshot plus the user's settings into a single "target this one" answer.</summary>
+/// <summary>Turns a scan plus the user's settings into a single "target this one" answer.</summary>
 public sealed class TargetPicker(Configuration config)
 {
-    /// <summary>Rank pushed onto alliance members so your own party always sorts first.</summary>
-    private const int AllianceRankPenalty = 1000;
+    /// <summary>Rank span reserved for each <see cref="MemberSource"/>, so party always beats alliance.</summary>
+    private const int GroupSize = 1000;
 
-    /// <summary>Rank for a member that matched nothing in the priority list.</summary>
+    /// <summary>Rank within a group for someone who matched nothing in the priority list.</summary>
     private const int UnrankedPenalty = 500;
 
     public PickResult PickRaiseTarget(IReadOnlyList<PartyMemberInfo> members)
@@ -33,7 +33,11 @@ public sealed class TargetPicker(Configuration config)
         if (members.Count == 0)
             return PickResult.Fail(PickFailure.NoPartyData);
 
-        var dead = members.Where(m => m.IsDead && !m.IsSelf).ToList();
+        var allowed = members.Where(m => IsSourceAllowed(m.Source, forRaise: true)).ToList();
+        if (allowed.Count == 0)
+            return PickResult.Fail(PickFailure.NoPartyData);
+
+        var dead = allowed.Where(m => m.IsDead && !m.IsSelf).ToList();
         if (dead.Count == 0)
             return PickResult.Fail(PickFailure.NobodyDead);
 
@@ -50,9 +54,10 @@ public sealed class TargetPicker(Configuration config)
 
         var ranked = eligible
             .Select(m => (Member: m, Rank: RankFor(m)))
-            .Where(x => !config.RaiseOnlyListed || x.Rank < UnrankedPenalty)
+            .Where(x => !config.RaiseOnlyListed || IsListed(x.Rank))
             .OrderBy(x => x.Rank)
             .ThenBy(x => x.Member.PartyIndex)
+            .ThenBy(x => x.Member.Distance)
             .ToList();
 
         return ranked.Count == 0
@@ -65,7 +70,7 @@ public sealed class TargetPicker(Configuration config)
         if (members.Count == 0)
             return PickResult.Fail(PickFailure.NoPartyData);
 
-        var alive = members.Where(m => !m.IsDead);
+        var alive = members.Where(m => IsSourceAllowed(m.Source, forRaise: false) && !m.IsDead);
 
         if (!config.LowestIncludeSelf)
             alive = alive.Where(m => !m.IsSelf);
@@ -82,6 +87,7 @@ public sealed class TargetPicker(Configuration config)
             .OrderBy(m => m.HpPercent)
             .ThenBy(m => m.CurrentHp)
             .ThenBy(m => m.PartyIndex)
+            .ThenBy(m => m.Distance)
             .ToList();
 
         return hurt.Count == 0
@@ -89,13 +95,21 @@ public sealed class TargetPicker(Configuration config)
             : PickResult.Found(hurt[0]);
     }
 
+    private bool IsSourceAllowed(MemberSource source, bool forRaise) => source switch
+    {
+        MemberSource.Party => true,
+        MemberSource.Alliance => forRaise ? config.RaiseIncludeAlliance : config.LowestIncludeAlliance,
+        MemberSource.Nearby => forRaise ? config.RaiseIncludeNearby : config.LowestIncludeNearby,
+        _ => false,
+    };
+
     /// <summary>
-    /// Index of the first enabled priority entry this member matches. Lower wins. Members that
-    /// match nothing land after every listed member but still ahead of the alliance.
+    /// Index of the first enabled priority entry this member matches, offset by their group. Lower
+    /// wins, so an unmatched party member still sorts ahead of a matched stranger.
     /// </summary>
     public int RankFor(PartyMemberInfo member)
     {
-        var basePenalty = member.IsAllianceMember ? AllianceRankPenalty : 0;
+        var groupOffset = (int)member.Source * GroupSize;
         var list = config.RaisePriority;
 
         for (var i = 0; i < list.Count; i++)
@@ -112,10 +126,10 @@ public sealed class TargetPicker(Configuration config)
             };
 
             if (matches)
-                return basePenalty + i;
+                return groupOffset + i;
         }
 
-        return basePenalty + UnrankedPenalty;
+        return groupOffset + UnrankedPenalty;
     }
 
     /// <summary>
@@ -140,15 +154,15 @@ public sealed class TargetPicker(Configuration config)
     }
 
     /// <summary>True when the rank came from an actual priority line rather than the fallback.</summary>
-    public static bool IsListed(int rank) => rank % AllianceRankPenalty < UnrankedPenalty;
+    public static bool IsListed(int rank) => rank % GroupSize < UnrankedPenalty;
 
     /// <summary>Zero-based index of the priority line a rank came from.</summary>
-    public static int ListPosition(int rank) => rank % AllianceRankPenalty;
+    public static int ListPosition(int rank) => rank % GroupSize;
 
     public static string DescribeFailure(PickFailure failure) => failure switch
     {
         PickFailure.NotLoggedIn => "not logged in.",
-        PickFailure.NoPartyData => "no party members found.",
+        PickFailure.NoPartyData => "nobody to consider.",
         PickFailure.NobodyDead => "nobody is dead.",
         PickFailure.AllDeadFilteredOut => "every corpse is already being raised or is filtered out.",
         PickFailure.NobodyInRange => "nobody is in range.",

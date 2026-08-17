@@ -113,8 +113,15 @@ last, unless **Only raise players on the list above** is on, in which case they 
   you do not double up on a body that is already waiting on an accept prompt.
 - **Skip corpses someone else is mid-cast on** — watches other players' cast bars for raise spells
   and hands you the next body instead.
-- **Include the other alliance parties** — for 24-player content. Your own party always sorts first.
+- **Include the other alliance parties** — for 24-player content.
+- **Include anyone nearby, party or not** — for field operations like Occult Crescent, Bozja and
+  Eureka, where the people who need raising share the zone with you but are in no party of yours.
 - **Max distance** — 30 yalms by default, which is raise range. Set to 0 to ignore distance.
+
+Candidates are grouped before the priority list is applied: your own party first, then the alliance,
+then unaffiliated players nearby. So an unmatched party member still outranks a matched stranger, and
+turning the nearby option on cannot pull your button away from your own team. Inside the nearby
+group, ties break by who is closest.
 
 ## Lowest HP settings
 
@@ -123,15 +130,18 @@ last, unless **Only raise players on the list above** is on, in which case they 
   button to do nothing when the party is basically topped off.
 - **Keep my current target when nobody qualifies** — on by default, so a stray press mid-pull does
   not drop your target.
+- **Include anyone nearby, party or not** — the same field-operation case. Worth pairing with a
+  lower HP threshold, or the button will keep finding a lightly scratched stranger to heal.
 - Max distance, and an alliance toggle.
 
 Dead players are never picked here. That is what the raise button is for.
 
 ## The Party tab
 
-A live table of your party while you play: HP bars, distance, which priority line each dead player
-matched, and whether someone else is already raising them. `>` marks the next raise target, `*`
-marks the lowest HP target. Useful for checking your priority list is doing what you meant before
+A live table of everyone in scope while you play: HP bars, distance, which priority line each dead
+player matched, and whether someone else is already raising them. `>` marks the next raise target,
+`*` marks the lowest HP target. Your party sorts first and corpses float to the top of each group;
+in a busy field operation the table shows a slice, but the picks still consider everyone. Useful for checking your priority list is doing what you meant before
 you rely on it in a raid.
 
 ## Optional: let the plugin cast the raise

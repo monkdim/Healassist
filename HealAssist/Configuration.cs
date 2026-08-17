@@ -93,6 +93,12 @@ public sealed class Configuration : IPluginConfiguration
     /// <summary>Also consider the other two alliance parties in 24-player content.</summary>
     public bool RaiseIncludeAlliance { get; set; }
 
+    /// <summary>
+    /// Also consider players who share the zone but are in no party of yours. This is what makes
+    /// the raise button work in field operations like Occult Crescent, Bozja and Eureka.
+    /// </summary>
+    public bool RaiseIncludeNearby { get; set; }
+
     /// <summary>Opt-in: let the plugin fire the raise itself instead of relying on a macro line.</summary>
     public bool AutoCastRaise { get; set; }
 
@@ -113,6 +119,9 @@ public sealed class Configuration : IPluginConfiguration
     public float LowestMaxDistance { get; set; } = 30f;
 
     public bool LowestIncludeAlliance { get; set; }
+
+    /// <summary>Also consider unaffiliated players in the zone, for field operations.</summary>
+    public bool LowestIncludeNearby { get; set; }
 
     /// <summary>Keep the current target rather than clearing it when nobody qualifies.</summary>
     public bool LowestKeepTargetIfNoneFound { get; set; } = true;
