@@ -79,7 +79,14 @@ jobs:
             LastUpdate          = [string][DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
           }
 
-          ConvertTo-Json -InputObject @($entry) -Depth 5 -AsArray | Set-Content repo.json -Encoding utf8
+          # -AsArray wraps the input, so pass the single entry rather than an array —
+          # passing @($entry) here produces a nested [[{...}]] that Dalamud cannot read.
+          ConvertTo-Json -InputObject $entry -Depth 5 -AsArray | Set-Content repo.json -Encoding utf8
+
+          $parsed = Get-Content repo.json -Raw | ConvertFrom-Json
+          if ($parsed -isnot [array] -or $parsed[0] -isnot [pscustomobject] -or -not $parsed[0].InternalName) {
+            throw "repo.json is not a flat array of plugin manifests"
+          }
           Write-Host "Manifest for $($manifest.Name) $version"
           Get-Content repo.json
 
