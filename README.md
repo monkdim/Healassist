@@ -11,6 +11,22 @@ party member yourself.
 
 ---
 
+## Installing
+
+In game, open Dalamud Settings (`/xlsettings`) → **Experimental** → **Custom Plugin Repositories**,
+paste this URL, hit the **+**, then **Save and Close**:
+
+```
+https://github.com/monkdim/Healassist/releases/latest/download/repo.json
+```
+
+HealAssist then shows up in the plugin installer (`/xlplugins`) under **All Plugins** — search for it
+and hit Install. Updates come through the normal plugin updater from then on.
+
+That URL always resolves to the newest release, so it never needs changing.
+
+---
+
 ## The two commands
 
 | Command | What it does |
@@ -147,13 +163,21 @@ The built plugin lands in `HealAssist/bin/Release/HealAssist/`. To load it in ga
 under Dalamud Settings → Experimental → **Dev Plugin Locations**, then enable HealAssist in the
 plugin installer.
 
-### Grabbing a build without a toolchain
+### CI
 
-Every push builds on CI (`.github/workflows/build.yml`) against the current Dalamud release on a
-Windows runner and uploads the result as a run artifact. Open the
-[Actions tab](https://github.com/monkdim/Healassist/actions), pick the latest green run, download
-the **HealAssist** artifact, unzip it somewhere permanent, and point Dev Plugin Locations at that
-folder. No .NET install needed.
+Two workflows, both building against the current Dalamud release on a Windows runner:
+
+- **`build.yml`** runs on every pull request and uploads the built plugin as a run artifact. Useful
+  for testing a branch: download it from the [Actions tab](https://github.com/monkdim/Healassist/actions),
+  unzip somewhere permanent, and point Dev Plugin Locations at that folder.
+- **`release.yml`** runs on pushes to `main` (or on demand). It builds, generates `repo.json` from
+  `HealAssist.json` plus the `<Version>` in the csproj, and publishes both that manifest and
+  `latest.zip` as assets on a `v{version}` GitHub release. Because the manifest's download links use
+  the `/releases/latest/download/` redirect, the repository URL above is permanent.
+
+To cut a new version for users, bump `<Version>` in `HealAssist.csproj` — the tag, the release and
+the `AssemblyVersion` Dalamud compares against all follow from it. Re-running without a bump just
+replaces the assets on the existing release, which will not prompt anyone to update.
 
 If you build against an older Dalamud API level, the one thing that needs changing is `Svc.Me` in
 `HealAssist/Svc.cs` — `LocalPlayer` moved from `IClientState` to `IObjectTable` in API 14 and was
