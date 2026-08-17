@@ -5,7 +5,7 @@
   "Punchline": "One-button raise targeting and lowest-HP targeting for healers.",
   "Description": "HealAssist gives you two commands built for hotbar macros or crossbar slots:\n\n• /harez — targets the highest-priority raisable dead party member, using a priority list you build yourself (by role, or by specific player name).\n• /halow — targets the party member with the lowest HP percentage.\n\nHealAssist only changes your target. Your macro casts the spell, so the game's own cast/queue rules apply exactly as if you had clicked the party member yourself. An opt-in setting can have the plugin fire the raise for you instead.",
   "ApplicableVersion": "any",
-  "DalamudApiLevel": 14,
+  "DalamudApiLevel": 15,
   "RepoUrl": "https://github.com/monkdim/Healassist",
   "Tags": [
     "healer",

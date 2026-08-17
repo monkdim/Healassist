@@ -1,0 +1,47 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+      - 'claude/**'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Download Dalamud
+        shell: pwsh
+        run: |
+          # Dalamud.NET.Sdk resolves its reference assemblies from this path by default,
+          # which is where XIVLauncher puts them on a real install.
+          $hooks = "$env:AppData\XIVLauncher\addon\Hooks\dev"
+          New-Item -ItemType Directory -Force -Path $hooks | Out-Null
+          Invoke-WebRequest -Uri https://goatcorp.github.io/dalamud-distrib/latest.zip -OutFile dalamud.zip
+          Expand-Archive -Path dalamud.zip -DestinationPath $hooks -Force
+          $version = Invoke-RestMethod -Uri https://goatcorp.github.io/dalamud-distrib/version
+          Write-Host "Building against Dalamud $($version.AssemblyVersion)"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -c Release --nologo
+
+      - name: Upload plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: HealAssist
+          path: HealAssist/bin/Release/HealAssist/*
+          if-no-files-found: error
