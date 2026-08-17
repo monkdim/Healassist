@@ -42,9 +42,24 @@ jobs:
       - name: Build
         run: dotnet build --no-restore -c Release --nologo
 
+      - name: Stage a drop-in plugin folder
+        shell: pwsh
+        run: |
+          # DalamudPackager leaves a latest.zip next to the manifest. Unpack it so the
+          # downloaded artifact is directly loadable as a Dev Plugin Location instead of
+          # being a zip inside a zip.
+          $out = "HealAssist/bin/Release/HealAssist"
+          New-Item -ItemType Directory -Force -Path staging | Out-Null
+          if (Test-Path "$out/latest.zip") {
+            Expand-Archive -Path "$out/latest.zip" -DestinationPath staging -Force
+          } else {
+            Copy-Item "$out/*" staging -Recurse -Force
+          }
+          Get-ChildItem -Recurse staging | ForEach-Object { Write-Host $_.FullName }
+
       - name: Upload plugin
         uses: actions/upload-artifact@v4
         with:
           name: HealAssist
-          path: HealAssist/bin/Release/HealAssist/*
+          path: staging/*
           if-no-files-found: error
