@@ -83,10 +83,13 @@ jobs:
           # passing @($entry) here produces a nested [[{...}]] that Dalamud cannot read.
           ConvertTo-Json -InputObject $entry -Depth 5 -AsArray | Set-Content repo.json -Encoding utf8
 
-          $parsed = Get-Content repo.json -Raw | ConvertFrom-Json
-          if ($parsed -isnot [array] -or $parsed[0] -isnot [pscustomobject] -or -not $parsed[0].InternalName) {
-            throw "repo.json is not a flat array of plugin manifests"
-          }
+          # -NoEnumerate matters: without it the pipeline unrolls a one-element array and the
+          # array check below fails on perfectly good output.
+          $parsed = Get-Content repo.json -Raw | ConvertFrom-Json -NoEnumerate
+          if ($parsed -isnot [array]) { throw "repo.json is not a JSON array" }
+          if ($parsed.Count -ne 1) { throw "repo.json should hold exactly one plugin, found $($parsed.Count)" }
+          if ($parsed[0] -isnot [pscustomobject]) { throw "repo.json entries are nested arrays, not manifests" }
+          if (-not $parsed[0].InternalName) { throw "repo.json entry has no InternalName" }
           Write-Host "Manifest for $($manifest.Name) $version"
           Get-Content repo.json
 
