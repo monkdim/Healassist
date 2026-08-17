@@ -1,13 +1,14 @@
 using System.Numerics;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.ClientState.Party;
+using Dalamud.Game.ClientState.Statuses;
 using HealAssist.Data;
 
 namespace HealAssist.Core;
 
 /// <summary>
-/// Builds the list of party members HealAssist can act on. Everything in here must run on the
-/// framework thread — <see cref="Svc.Objects"/> throws if touched from anywhere else.
+/// Builds the list of players HealAssist can act on. Everything in here must run on the framework
+/// thread — <see cref="Svc.Objects"/> throws if touched from anywhere else.
 /// </summary>
 public sealed class PartyScanner(Configuration config)
 {
@@ -19,9 +20,19 @@ public sealed class PartyScanner(Configuration config)
     /// </summary>
     private readonly HashSet<ulong> incomingRaises = [];
 
-    public IReadOnlyList<PartyMemberInfo> Scan(bool includeAlliance)
+    /// <summary>Entity IDs already added, so the nearby sweep does not duplicate party members.</summary>
+    private readonly HashSet<uint> seen = [];
+
+    /// <param name="includeAlliance">Also read the other two parties in 24-player content.</param>
+    /// <param name="includeNearby">
+    /// Also sweep the object table for unaffiliated players. This is what makes the plugin useful
+    /// in field operations like Occult Crescent, where the people who need raising are in the zone
+    /// with you but not in your party or alliance.
+    /// </param>
+    public IReadOnlyList<PartyMemberInfo> Scan(bool includeAlliance, bool includeNearby)
     {
         var result = new List<PartyMemberInfo>(8);
+        seen.Clear();
 
         var me = Svc.Me;
         if (me is null)
@@ -31,30 +42,38 @@ public sealed class PartyScanner(Configuration config)
 
         if (Svc.Party.Length == 0)
         {
-            // Solo, or in a duty that has not populated the party list yet. You are still a
-            // legitimate target for the lowest-HP command.
-            var solo = Build(me, me.CurrentHp, me.MaxHp, me.ClassJob.RowId, me.StatusList, me.Position,
-                             me.Position, 0, true, false);
-            if (solo is not null)
-                result.Add(solo);
-            return result;
+            // Solo, or in content that has not populated the party list. You are still a legitimate
+            // target for the lowest-HP command.
+            Add(result, Build(me, me.CurrentHp, me.MaxHp, me.ClassJob.RowId, me.StatusList, me.Position,
+                              me.Position, 0, true, MemberSource.Party));
         }
-
-        for (var i = 0; i < Svc.Party.Length; i++)
+        else
         {
-            var member = Svc.Party[i];
-            if (member is null)
-                continue;
+            for (var i = 0; i < Svc.Party.Length; i++)
+            {
+                var member = Svc.Party[i];
+                if (member is null)
+                    continue;
 
-            var info = BuildFromMember(member, me.Position, i, isAlliance: false, me.EntityId);
-            if (info is not null)
-                result.Add(info);
+                Add(result, BuildFromMember(member, me.Position, i, MemberSource.Party, me.EntityId));
+            }
         }
 
         if (includeAlliance)
             CollectAlliance(result, me.Position, me.EntityId);
 
+        if (includeNearby)
+            CollectNearby(result, me, me.EntityId);
+
         return result;
+    }
+
+    private void Add(List<PartyMemberInfo> result, PartyMemberInfo? info)
+    {
+        if (info is null || !seen.Add(info.GameObject.EntityId))
+            return;
+
+        result.Add(info);
     }
 
     private void CollectAlliance(List<PartyMemberInfo> result, Vector3 origin, uint myEntityId)
@@ -63,11 +82,10 @@ public sealed class PartyScanner(Configuration config)
         // a null address, so the loop simply finds nothing outside of alliance raids.
         for (var i = 0; i < MaxAllianceSlots; i++)
         {
-            nint address;
             IPartyMember? member;
             try
             {
-                address = Svc.Party.GetAllianceMemberAddress(i);
+                var address = Svc.Party.GetAllianceMemberAddress(i);
                 if (address == nint.Zero)
                     continue;
                 member = Svc.Party.CreateAllianceMemberReference(address);
@@ -81,15 +99,40 @@ public sealed class PartyScanner(Configuration config)
             if (member is null)
                 continue;
 
-            var info = BuildFromMember(member, origin, Svc.Party.Length + i, isAlliance: true, myEntityId);
-
-            // Alliance and party lists can overlap in some transitional states.
-            if (info is not null && result.All(existing => existing.GameObject.EntityId != info.GameObject.EntityId))
-                result.Add(info);
+            Add(result, BuildFromMember(member, origin, Svc.Party.Length + i, MemberSource.Alliance, myEntityId));
         }
     }
 
-    private PartyMemberInfo? BuildFromMember(IPartyMember member, Vector3 origin, int index, bool isAlliance, uint myEntityId)
+    /// <summary>
+    /// Every other player object in range that is not already accounted for. In a full field
+    /// operation this is a few dozen objects, walked once per command press.
+    /// </summary>
+    private void CollectNearby(List<PartyMemberInfo> result, IBattleChara me, uint myEntityId)
+    {
+        var limit = Math.Max(config.RaiseMaxDistance, config.LowestMaxDistance);
+
+        foreach (var player in Svc.Objects.PlayerObjects)
+        {
+            if (player.EntityId == myEntityId || seen.Contains(player.EntityId))
+                continue;
+
+            // A corpse you cannot target is a corpse you cannot raise.
+            if (!player.IsTargetable)
+                continue;
+
+            // The nearby sweep is the one unbounded source, so cut it by distance up front rather
+            // than building snapshots for the whole zone.
+            var distance = Vector3.Distance(me.Position, player.Position);
+            if (limit > 0 && distance > limit)
+                continue;
+
+            Add(result, Build(player, player.CurrentHp, player.MaxHp, player.ClassJob.RowId,
+                              player.StatusList, player.Position, me.Position,
+                              int.MaxValue, false, MemberSource.Nearby));
+        }
+    }
+
+    private PartyMemberInfo? BuildFromMember(IPartyMember member, Vector3 origin, int index, MemberSource source, uint myEntityId)
     {
         // Out of object-table range. There is nothing to target, so there is nothing to do.
         if (member.GameObject is null)
@@ -97,7 +140,7 @@ public sealed class PartyScanner(Configuration config)
 
         return Build(member.GameObject, member.CurrentHP, member.MaxHP, member.ClassJob.RowId,
                      member.Statuses, member.Position, origin, index,
-                     member.GameObject.EntityId == myEntityId, isAlliance);
+                     member.GameObject.EntityId == myEntityId, source);
     }
 
     private PartyMemberInfo? Build(
@@ -105,12 +148,12 @@ public sealed class PartyScanner(Configuration config)
         uint currentHp,
         uint maxHp,
         uint jobId,
-        Dalamud.Game.ClientState.Statuses.StatusList? statuses,
+        StatusList? statuses,
         Vector3 position,
         Vector3 origin,
         int index,
         bool isSelf,
-        bool isAlliance)
+        MemberSource source)
     {
         // 0 and the "empty" sentinel both mean the slot points at nothing targetable.
         if (gameObject.EntityId is 0 or 0xE000_0000)
@@ -127,13 +170,13 @@ public sealed class PartyScanner(Configuration config)
             Distance = Vector3.Distance(origin, position),
             PartyIndex = index,
             IsSelf = isSelf,
-            IsAllianceMember = isAlliance,
+            Source = source,
             HasRaisePending = HasRaisePending(statuses),
             IsBeingRaisedByOther = incomingRaises.Contains(gameObject.EntityId),
         };
     }
 
-    private static bool HasRaisePending(Dalamud.Game.ClientState.Statuses.StatusList? statuses)
+    private static bool HasRaisePending(StatusList? statuses)
     {
         if (statuses is null)
             return false;

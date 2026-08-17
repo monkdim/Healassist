@@ -15,6 +15,9 @@ public sealed class ConfigWindow : Window, IDisposable
     private static readonly Vector4 Bad = ImGuiColors.DalamudRed;
     private static readonly Vector4 Muted = ImGuiColors.DalamudGrey;
 
+    /// <summary>The nearby sweep can return a whole field-operation zone; the table shows a slice.</summary>
+    private const int MaxPartyRows = 24;
+
     private readonly Plugin plugin;
     private readonly CommandRunner runner;
     private readonly TargetPicker picker;
@@ -262,6 +265,12 @@ public sealed class ConfigWindow : Window, IDisposable
             v => Config.RaiseIncludeAlliance = v,
             "Your own party is always considered first.");
 
+        CheckboxSetting("Include anyone nearby, party or not", Config.RaiseIncludeNearby,
+            v => Config.RaiseIncludeNearby = v,
+            "For field operations — Occult Crescent, Bozja, Eureka — where the people who need\n"
+          + "raising are in the zone with you but not in any party of yours.\n"
+          + "Your party is still considered first, then the alliance, then everyone else.");
+
         var distance = Config.RaiseMaxDistance;
         ImGui.SetNextItemWidth(220f);
         if (ImGui.SliderFloat("Max distance (yalms)", ref distance, 0f, 60f, "%.0f"))
@@ -339,6 +348,11 @@ public sealed class ConfigWindow : Window, IDisposable
 
         CheckboxSetting("Include the other alliance parties (24-player content)", Config.LowestIncludeAlliance,
             v => Config.LowestIncludeAlliance = v, null);
+
+        CheckboxSetting("Include anyone nearby, party or not##low", Config.LowestIncludeNearby,
+            v => Config.LowestIncludeNearby = v,
+            "Same field-operation case as the raise button. Worth pairing with a lower HP\n"
+          + "threshold, or the button will keep finding a scratched stranger to heal.");
 
         CheckboxSetting("Keep my current target when nobody qualifies", Config.LowestKeepTargetIfNoneFound,
             v => Config.LowestKeepTargetIfNoneFound = v,
@@ -575,12 +589,28 @@ public sealed class ConfigWindow : Window, IDisposable
 
         if (preview.Members.Count == 0)
         {
-            Colored(Muted, "No party data. Log in and join a party to see this fill in.");
+            Colored(Muted, "Nobody to show. Log in and join a party, or turn on \"Include anyone nearby\".");
             return;
         }
 
         var raiseId = preview.Raise.Target?.GameObject.EntityId;
         var lowestId = preview.Lowest.Target?.GameObject.EntityId;
+
+        // With the nearby sweep on this can be the whole zone, so show your own party first and
+        // float corpses to the top of each group rather than dumping object-table order.
+        var rows = preview.Members
+            .OrderBy(m => m.Source)
+            .ThenByDescending(m => m.IsDead)
+            .ThenBy(m => m.PartyIndex)
+            .ThenBy(m => m.Distance)
+            .ToList();
+
+        var hidden = 0;
+        if (rows.Count > MaxPartyRows)
+        {
+            hidden = rows.Count - MaxPartyRows;
+            rows = rows.Take(MaxPartyRows).ToList();
+        }
 
         const ImGuiTableFlags flags = ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingStretchProp;
         if (!ImGui.BeginTable("##party", 6, flags))
@@ -594,7 +624,7 @@ public sealed class ConfigWindow : Window, IDisposable
         ImGui.TableSetupColumn("Notes", ImGuiTableColumnFlags.WidthStretch, 1.6f);
         ImGui.TableHeadersRow();
 
-        foreach (var member in preview.Members)
+        foreach (var member in rows)
         {
             ImGui.TableNextRow();
 
@@ -633,6 +663,8 @@ public sealed class ConfigWindow : Window, IDisposable
         ImGui.EndTable();
 
         ImGui.Spacing();
+        if (hidden > 0)
+            Colored(Muted, $"{hidden} more not shown — the picks above still consider everyone.");
         Colored(Muted, "> next raise target      * lowest HP target");
     }
 
@@ -648,7 +680,8 @@ public sealed class ConfigWindow : Window, IDisposable
     {
         var notes = new List<string>(3);
         if (member.IsSelf) notes.Add("you");
-        if (member.IsAllianceMember) notes.Add("alliance");
+        if (member.Source == MemberSource.Alliance) notes.Add("alliance");
+        if (member.Source == MemberSource.Nearby) notes.Add("nearby");
         if (member.HasRaisePending) notes.Add("raise pending");
         if (member.IsBeingRaisedByOther) notes.Add("being raised");
         return notes.Count == 0 ? string.Empty : string.Join(", ", notes);
