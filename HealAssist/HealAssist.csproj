@@ -1,7 +1,7 @@
 <Project Sdk="Dalamud.NET.Sdk/15.0.0">
 
   <PropertyGroup>
-    <Version>1.1.0.0</Version>
+    <Version>1.1.0.1</Version>
     <Authors>monkdim</Authors>
     <Company>-</Company>
     <Description>Priority-based raise targeting and lowest-HP targeting for healers.</Description>
