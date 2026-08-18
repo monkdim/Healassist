@@ -8,7 +8,7 @@ namespace HealAssist.Core;
 
 /// <summary>
 /// Builds the list of players HealAssist can act on. Everything in here must run on the framework
-/// thread — <see cref="Svc.Objects"/> throws if touched from anywhere else.
+/// thread, since <see cref="Svc.Objects"/> throws if touched from anywhere else.
 /// </summary>
 public sealed class PartyScanner(Configuration config)
 {

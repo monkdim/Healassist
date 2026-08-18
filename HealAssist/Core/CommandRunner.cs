@@ -72,7 +72,7 @@ public sealed class CommandRunner(Configuration config, PartyScanner scanner, Ta
         if (result.Target is not null)
         {
             if (config.ChatFeedbackOnSuccess)
-                Svc.Chat.Print($"[HealAssist] {label} → {result.Target.Name} ({result.Target.JobAbbreviation})");
+                Svc.Chat.Print($"[HealAssist] {label}: {result.Target.Name} ({result.Target.JobAbbreviation})");
         }
         else if (config.ChatFeedbackOnFailure)
         {

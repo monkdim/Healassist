@@ -96,7 +96,7 @@ public sealed class ConfigWindow : Window, IDisposable
             runner.TargetRaise();
 
         ImGui.Separator();
-        ImGui.TextUnformatted("Priority list — the first line that matches a dead player wins.");
+        ImGui.TextUnformatted("Priority list. The first line that matches a dead player wins.");
         Hint("Reorder with the arrows. Add a specific character name to always pull them to the front,\n"
            + "for example your co-healer or a friend who needs to be up first.");
         ImGui.Spacing();
@@ -267,7 +267,7 @@ public sealed class ConfigWindow : Window, IDisposable
 
         CheckboxSetting("Include anyone nearby, party or not", Config.RaiseIncludeNearby,
             v => Config.RaiseIncludeNearby = v,
-            "For field operations — Occult Crescent, Bozja, Eureka — where the people who need\n"
+            "For field operations such as Occult Crescent, Bozja and Eureka, where the people who\n"
           + "raising are in the zone with you but not in any party of yours.\n"
           + "Your party is still considered first, then the alliance, then everyone else.");
 
@@ -286,7 +286,7 @@ public sealed class ConfigWindow : Window, IDisposable
         ImGui.TextUnformatted("Let HealAssist cast the raise itself");
         ColoredWrapped(Muted,
             "Optional, and off by default. The recommended setup is to leave this off and let your macro "
-          + "do the casting — see the Macros tab, you still get one button. Turning this on means the "
+          + "do the casting. See the Macros tab, you still get one button. Turning this on means the "
           + "plugin sends the action for you, which is the kind of automation Square Enix's Terms of "
           + "Service prohibit. Your call, your account.");
         ImGui.Spacing();
@@ -377,7 +377,7 @@ public sealed class ConfigWindow : Window, IDisposable
         Hint("Most single-target heals reach 30y. Set to 0 to ignore distance.");
 
         ImGui.Separator();
-        ColoredWrapped(Muted, "Dead players are never picked here — that is what the raise button is for.");
+        ColoredWrapped(Muted, "Dead players are never picked here. Use the raise button for those.");
     }
 
     // =====================================================================
@@ -388,7 +388,7 @@ public sealed class ConfigWindow : Window, IDisposable
     {
         ImGui.TextWrapped(
             "Hotkeys are optional. If you play on a controller, putting the macros on a crossbar slot "
-          + "is usually easier — see the Macros tab. Use these if you have a spare keyboard key, or if "
+          + "is usually easier, see the Macros tab. Use these if you have a spare keyboard key, or if "
           + "you remap a controller button to a keyboard key with Steam Input, JoyToKey or DS4Windows.");
         ImGui.Spacing();
         ColoredWrapped(Muted, "These read the game's own key state, so they only fire while FFXIV has focus, "
@@ -494,7 +494,7 @@ public sealed class ConfigWindow : Window, IDisposable
     {
         ImGui.TextWrapped(
             "This is the recommended setup. HealAssist moves your target, the next macro line casts the "
-          + "spell — so the game handles the cast exactly as if you had clicked the party member yourself.");
+          + "spell, so the game handles the cast exactly as if you had clicked the party member yourself.");
         ImGui.Spacing();
         ImGui.TextWrapped(
             "Make a macro in-game (User Macros), paste one of these in, give it an icon, then drag it "
@@ -532,8 +532,8 @@ public sealed class ConfigWindow : Window, IDisposable
           + "setups, so you get two free buttons without giving anything up.");
         ImGui.Spacing();
         ImGui.TextWrapped(
-            "If you want a dedicated physical button instead, map an unused one — L3, R3, or the touchpad "
-          + "click — to a spare keyboard key with Steam Input, DS4Windows or JoyToKey, then bind that key "
+            "If you want a dedicated physical button instead, map an unused one such as L3, R3 or the "
+          + "touchpad click to a spare keyboard key with Steam Input, DS4Windows or JoyToKey, then bind it "
           + "to the hotbar slot holding the macro. Insert, Delete, Home, End, Page Up, Page Down and the "
           + "numpad keys are all free in a default FFXIV keybind layout.");
     }
@@ -664,7 +664,7 @@ public sealed class ConfigWindow : Window, IDisposable
 
         ImGui.Spacing();
         if (hidden > 0)
-            Colored(Muted, $"{hidden} more not shown — the picks above still consider everyone.");
+            Colored(Muted, $"{hidden} more not shown. The picks above still consider everyone.");
         Colored(Muted, "> next raise target      * lowest HP target");
     }
 
@@ -698,7 +698,7 @@ public sealed class ConfigWindow : Window, IDisposable
 
         if (result.Target is not null)
         {
-            Colored(Good, $"{result.Target.Name} ({result.Target.JobAbbreviation}) — {result.Target.Distance:F0}y");
+            Colored(Good, $"{result.Target.Name} ({result.Target.JobAbbreviation}), {result.Target.Distance:F0}y");
         }
         else
         {

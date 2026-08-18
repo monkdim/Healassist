@@ -24,7 +24,7 @@ internal sealed class Svc
 
     /// <summary>
     /// The local player. Isolated here because it moved from IClientState to IObjectTable in
-    /// Dalamud API 14, and IClientState.LocalPlayer was removed outright in API 15 — if you ever
+    /// Dalamud API 14, and IClientState.LocalPlayer was removed outright in API 15. If you ever
     /// build against an older level, this is the only line that needs to change back.
     /// </summary>
     internal static IPlayerCharacter? Me => Objects.LocalPlayer;

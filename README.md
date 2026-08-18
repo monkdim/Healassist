@@ -2,47 +2,48 @@
 
 A Dalamud plugin for FFXIV that gives healers two buttons:
 
-- **Raise button** — targets the highest-priority dead party member, using a priority list you build yourself.
-- **Lowest HP button** — targets whoever in the party has the lowest HP percentage.
+* **Raise** targets the highest priority dead player, using a priority list you build yourself.
+* **Lowest HP** targets whoever has the lowest HP percentage.
 
-HealAssist moves your target cursor. Your macro casts the spell. That means one button press does
-the whole target-and-raise combo, while the game handles the cast exactly as if you had clicked the
-party member yourself.
+HealAssist moves your target. Your macro casts the spell. One button press does the whole
+target-and-raise combo, and the game handles the cast exactly as if you had clicked the party
+member yourself.
 
----
+## Requirements
+
+* Final Fantasy XIV on Windows
+* XIVLauncher with Dalamud (this is a Dalamud plugin, it will not run on its own)
+* Dalamud API 15 or newer
 
 ## Installing
 
-In game, open Dalamud Settings (`/xlsettings`) → **Experimental** → **Custom Plugin Repositories**,
-paste this URL, hit the **+**, then **Save and Close**:
+Open Dalamud settings in game with `/xlsettings`, go to **Experimental**, and find **Custom Plugin
+Repositories**. Paste this URL into the empty box, press the **+**, then **Save and Close**:
 
 ```
 https://github.com/monkdim/Healassist/releases/latest/download/repo.json
 ```
 
-HealAssist then shows up in the plugin installer (`/xlplugins`) under **All Plugins** — search for it
-and hit Install. Updates come through the normal plugin updater from then on.
+Now open the plugin installer with `/xlplugins`, search for HealAssist under **All Plugins**, and
+press Install. Future updates arrive through the normal plugin updater.
 
-That URL always resolves to the newest release, so it never needs changing.
-
----
+That URL always points at the newest release, so you never need to change it.
 
 ## The two commands
 
 | Command | What it does |
 | --- | --- |
-| `/harez` | Target the highest-priority raisable dead party member |
-| `/halow` | Target the party member with the lowest HP percentage |
-| `/healassist` | Open the settings window (`/ha` also works) |
+| `/harez` | Target the highest priority raisable dead player |
+| `/halow` | Target the player with the lowest HP percentage |
+| `/healassist` | Open the settings window (`/ha` works too) |
 
-`/healassist rez` and `/healassist low` do the same thing as the short commands, if you prefer one
-command to remember.
+If you would rather remember one command, `/healassist rez` and `/healassist low` do the same thing.
 
 ## Macros
 
-Make these in-game under **User Macros**, give them an icon, and drag them to a hotbar or crossbar
-slot. The **Macros** tab in the settings window has all of these with a Copy button, and it fills in
-the right spell name for whatever job you are currently on.
+Make these under **User Macros** in game, give them an icon, then drag them onto a hotbar or
+crossbar slot. The **Macros** tab in the settings window has all of them with a Copy button, and it
+fills in the correct spell name for whatever job you are currently playing.
 
 **Raise the priority target**
 
@@ -59,145 +60,157 @@ the right spell name for whatever job you are currently on.
 /ac "Raise" <t>
 ```
 
-**Heal the lowest HP party member**
+**Heal the lowest HP player**
 
 ```
 /halow
 /ac "Cure II" <t>
 ```
 
-Swap `Raise` for your job's spell — `Resurrection` (SCH/SMN), `Ascend` (AST), `Egeiro` (SGE),
-`Verraise` (RDM), `Angel Whisper` (BLU) — or make one macro per job.
+Swap `Raise` for whatever your job uses: `Resurrection` on SCH and SMN, `Ascend` on AST, `Egeiro` on
+SGE, `Verraise` on RDM, `Angel Whisper` on BLU. Or make one macro per job.
 
-Macros cannot queue actions the way a real hotbar press can, so on a raise the cast will start when
-you press it rather than clipping into a previous cast. For a 8-second raise cast that is fine. It
-is not something you would want for your regular DPS rotation.
+Macros cannot queue actions the way a real hotbar press can, so the cast starts when you press the
+button rather than clipping into a previous one. For an eight second raise that makes no practical
+difference. Do not build your DPS rotation this way.
 
 ## Getting this onto a controller
 
-**The easy way — use a crossbar slot you are not using.** Hold one trigger and double-tap the other
-to reach the WXHB, or turn on the Expanded Hold Controls in Character Configuration → Hotbar
-Settings → Custom. Those slots are empty on most setups, so you get two free buttons without giving
-anything up. Drag the macros there and you are done.
+**The easy way is a crossbar slot you are not using.** Hold one trigger and double tap the other to
+reach the WXHB, or turn on Expanded Hold Controls under Character Configuration, Hotbar Settings,
+Custom. Those slots sit empty on most setups, so you get two free buttons without giving anything up.
+Drag the macros there and you are done.
 
-**The dedicated-button way.** If you want a real physical button, map an unused one — L3, R3, or the
-touchpad click — to a spare keyboard key using Steam Input, DS4Windows or JoyToKey. Then either:
-
-- bind that key to the hotbar slot holding the macro, in Character Configuration → Keybind, or
-- bind it directly in HealAssist's **Hotkeys** tab, which skips the hotbar entirely (though then you
-  still press your raise button yourself, since only the macro route casts for you).
+**If you want a real physical button**, map an unused one such as L3, R3, or the touchpad click to a
+spare keyboard key using Steam Input, DS4Windows, or JoyToKey. Then either bind that key to the
+hotbar slot holding the macro under Character Configuration, Keybind, or bind it directly in
+HealAssist's **Hotkeys** tab to skip the hotbar entirely.
 
 Good spare keys in a default FFXIV layout: `Insert`, `Delete`, `Home`, `End`, `Page Up`, `Page Down`,
-and the numpad. Avoid F13–F24 — some remappers emit them, but the game does not always recognise
-them, and HealAssist can only read keys the game itself tracks.
+and the numpad. Avoid F13 through F24. Some remappers emit them, but the game does not reliably
+recognise them, and HealAssist can only read keys the game itself tracks.
 
 ## The raise priority list
 
-Settings → **Raise** tab. The list is checked top to bottom, and the first line that matches a dead
+Settings, **Raise** tab. The list is checked from the top down and the first line that matches a dead
 player wins. Two kinds of line:
 
-- **A role** — Healer, Tank, Melee DPS, Physical Ranged DPS, Magical Ranged DPS.
-- **A specific character** — type a name, e.g. `Eden Aphelion`. A one-word entry also matches that
-  person's first name, so `Eden` finds `Eden Aphelion`. There is an **Add from party** dropdown that
-  fills the name in for you, spelled exactly right.
+* **A role.** Healer, Tank, Melee DPS, Physical Ranged DPS, or Magical Ranged DPS.
+* **A specific character.** Type a name such as `Eden Aphelion`. A one word entry also matches that
+  person's first name, so `Eden` finds `Eden Aphelion`. The **Add from party** dropdown fills the
+  name in for you with the correct spelling.
 
-Put a named line above the role lines to always pull that person up first. Default order is
-Healer → Tank → Melee → Physical Ranged → Magical Ranged.
+Put a named line above the role lines to always bring that person up first. The default order is
+Healer, Tank, Melee, Physical Ranged, Magical Ranged.
 
-Ties inside one line break by party list order. If two people match nothing on the list, they go
-last, unless **Only raise players on the list above** is on, in which case they are skipped entirely.
+Ties inside one line break by party list order. Anyone matching nothing on the list goes last, unless
+you turn on **Only raise players on the list above**, which skips them entirely.
 
 ### Filters
 
-- **Skip corpses that already have a raise on them** — ignores anyone showing the Raise status, so
-  you do not double up on a body that is already waiting on an accept prompt.
-- **Skip corpses someone else is mid-cast on** — watches other players' cast bars for raise spells
-  and hands you the next body instead.
-- **Include the other alliance parties** — for 24-player content.
-- **Include anyone nearby, party or not** — for field operations like Occult Crescent, Bozja and
+* **Skip corpses that already have a raise on them.** Ignores anyone showing the Raise status so you
+  do not waste a cast on a body already waiting at the accept prompt.
+* **Skip corpses someone else is mid cast on.** Watches other players' cast bars for raise spells and
+  hands you the next body instead.
+* **Include the other alliance parties.** For 24 player content.
+* **Include anyone nearby, party or not.** For field operations such as Occult Crescent, Bozja, and
   Eureka, where the people who need raising share the zone with you but are in no party of yours.
-- **Max distance** — 30 yalms by default, which is raise range. Set to 0 to ignore distance.
+* **Max distance.** 30 yalms by default, which is raise range. Set it to 0 to ignore distance.
 
-Candidates are grouped before the priority list is applied: your own party first, then the alliance,
-then unaffiliated players nearby. So an unmatched party member still outranks a matched stranger, and
-turning the nearby option on cannot pull your button away from your own team. Inside the nearby
-group, ties break by who is closest.
+### How candidates are ordered
+
+Everyone is grouped before the priority list is applied: your own party first, then the alliance,
+then unaffiliated players nearby. An unmatched party member still outranks a matched stranger, so
+turning on the nearby option cannot pull your button away from your own team. Inside the nearby
+group, closest wins.
 
 ## Lowest HP settings
 
-- Include or exclude yourself.
-- **Only consider below X% HP** — at 100% the button always finds someone. Lower it if you want the
-  button to do nothing when the party is basically topped off.
-- **Keep my current target when nobody qualifies** — on by default, so a stray press mid-pull does
-  not drop your target.
-- **Include anyone nearby, party or not** — the same field-operation case. Worth pairing with a
-  lower HP threshold, or the button will keep finding a lightly scratched stranger to heal.
-- Max distance, and an alliance toggle.
+* Include or exclude yourself.
+* **Only consider below X% HP.** At 100% the button always finds someone. Lower it if you want the
+  button to do nothing while the party is basically topped off.
+* **Keep my current target when nobody qualifies.** On by default, so a stray press mid pull does not
+  drop your target.
+* **Include anyone nearby, party or not.** Same field operation case as above. Pair it with a lower
+  HP threshold or the button will keep finding a lightly scratched stranger to heal.
+* Max distance and an alliance toggle.
 
-Dead players are never picked here. That is what the raise button is for.
+Dead players are never picked here. Use the raise button for those.
 
 ## The Party tab
 
 A live table of everyone in scope while you play: HP bars, distance, which priority line each dead
-player matched, and whether someone else is already raising them. `>` marks the next raise target,
-`*` marks the lowest HP target. Your party sorts first and corpses float to the top of each group;
-in a busy field operation the table shows a slice, but the picks still consider everyone. Useful for checking your priority list is doing what you meant before
-you rely on it in a raid.
+player matched, and whether someone else is already raising them. `>` marks the next raise target and
+`*` marks the lowest HP target. Your party sorts first and corpses float to the top of each group. In
+a busy field operation the table shows a slice rather than the whole zone, but the picks still
+consider everyone.
+
+Use it to check your priority list does what you meant before you rely on it in a raid.
 
 ## Optional: let the plugin cast the raise
 
-There is a toggle under Settings → Raise → *Let HealAssist cast the raise itself*, with an optional
-Swiftcast-first option. It is **off by default**, and it is the one place this plugin presses a
-button on your behalf.
+Settings, Raise tab, *Let HealAssist cast the raise itself*, with an optional Swiftcast first option.
+This is **off by default** and it is the only place the plugin presses a button for you.
 
-Worth being straightforward about the tradeoff: setting your target is the same thing you do by
-clicking a party list slot, but having software send the action for you is the kind of automation
-Square Enix's Terms of Service prohibit, and third-party plugins are unsupported regardless. The
-macro route above gets you the same one-button result without that. Your call.
+Setting your target is the same thing you do by clicking a party list slot. Having software send the
+action for you is the kind of automation Square Enix prohibits, and third party plugins are
+unsupported regardless. The macro route above gets you the same one button result without that.
+Your call.
 
----
+## Troubleshooting
+
+**HealAssist does not appear in the plugin installer.** Press the refresh icon in `/xlplugins`.
+Dalamud caches the repository listing and will happily show you stale data. Also check the URL was
+saved: reopen `/xlsettings`, Experimental, and confirm it is listed and enabled.
+
+**It appears but will not install.** Usually an API level mismatch. HealAssist targets API 15. If
+your Dalamud is older, update XIVLauncher.
+
+**The raise button says "nobody is dead" when someone clearly is.** Check your max distance, and
+check whether the corpse already has a raise on it or is being raised by someone else. Both are
+filtered out by default. The Party tab shows you exactly which of these applies.
+
+**Nothing happens on a controller press.** The macro needs to be on a hotbar or crossbar slot. If you
+mapped a controller button to a keyboard key, confirm the game itself sees that key by binding it to
+something obvious first.
+
+**Chat feedback is noisy.** Turn off the success or failure messages in settings.
 
 ## Building
 
-Requirements:
-
-- .NET SDK 10.0.101 or newer
-- XIVLauncher/Dalamud installed, so the SDK can find the Dalamud assemblies
-- Targets **Dalamud API 15** (`Dalamud.NET.Sdk/15.0.0`)
+You need the .NET SDK 10.0.101 or newer, and XIVLauncher installed so the SDK can find the Dalamud
+assemblies. The project targets Dalamud API 15 through `Dalamud.NET.Sdk/15.0.0`.
 
 ```
 dotnet build -c Release
 ```
 
 The built plugin lands in `HealAssist/bin/Release/HealAssist/`. To load it in game, add that folder
-under Dalamud Settings → Experimental → **Dev Plugin Locations**, then enable HealAssist in the
-plugin installer.
+under Dalamud settings, Experimental, **Dev Plugin Locations**, then enable HealAssist in the plugin
+installer.
 
 ### CI
 
-Two workflows, both building against the current Dalamud release on a Windows runner:
+Two workflows, both building against the current Dalamud release on a Windows runner.
 
-- **`build.yml`** runs on every pull request and uploads the built plugin as a run artifact. Useful
-  for testing a branch: download it from the [Actions tab](https://github.com/monkdim/Healassist/actions),
-  unzip somewhere permanent, and point Dev Plugin Locations at that folder.
-- **`release.yml`** runs on pushes to `main` (or on demand). It builds, generates `repo.json` from
-  `HealAssist.json` plus the `<Version>` in the csproj, and publishes both that manifest and
-  `latest.zip` as assets on a `v{version}` GitHub release. Because the manifest's download links use
-  the `/releases/latest/download/` redirect, the repository URL above is permanent.
+`build.yml` runs on pull requests and uploads the built plugin as a run artifact. Handy for testing a
+branch: download it from the Actions tab, unzip it somewhere permanent, and point Dev Plugin
+Locations at that folder.
 
-To cut a new version for users: bump `<Version>` in `HealAssist.csproj`, then push a matching tag.
+`release.yml` runs on version tags and on pushes to `main`. It builds, generates `repo.json` from
+`HealAssist.json` plus the `<Version>` in the csproj, checks the manifest is a flat array of plugin
+entries, and publishes it alongside `latest.zip` on a `v{version}` GitHub release. The download links
+inside the manifest use the `/releases/latest/download/` redirect, which is what makes the repository
+URL permanent.
+
+To cut a new version, bump `<Version>` in `HealAssist.csproj` and push a matching tag:
 
 ```
-git tag v1.1.0.0 && git push origin v1.1.0.0
+git tag v1.2.0.0 && git push origin v1.2.0.0
 ```
 
-The release job refuses to run if the tag and the csproj version disagree, so the release name and
-the `AssemblyVersion` Dalamud compares against cannot drift apart. Re-running without a version bump
-just replaces the assets on the existing release, which will not prompt anyone to update.
-
-If you build against an older Dalamud API level, the one thing that needs changing is `Svc.Me` in
-`HealAssist/Svc.cs` — `LocalPlayer` moved from `IClientState` to `IObjectTable` in API 14 and was
-removed from `IClientState` entirely in API 15. That is isolated to a single line on purpose.
+The release job refuses to publish if the tag and the csproj version disagree, so the release name
+and the `AssemblyVersion` that Dalamud compares against cannot drift apart.
 
 ### Project layout
 
@@ -207,13 +220,13 @@ HealAssist/
   Svc.cs                 injected Dalamud services
   Configuration.cs       saved settings, priority entries, hotkeys
   Core/
-    PartyScanner.cs      reads the party into a safe snapshot
-    TargetPicker.cs      priority ranking and selection rules
-    CommandRunner.cs     sets the target, optional auto-cast
-    HotkeyManager.cs     optional in-game hotkeys
-    PartyMemberInfo.cs   one party member, flattened
+    PartyScanner.cs      reads party, alliance and nearby players into a snapshot
+    TargetPicker.cs      grouping, priority ranking, selection rules
+    CommandRunner.cs     sets the target, optional auto cast
+    HotkeyManager.cs     optional in game hotkeys
+    PartyMemberInfo.cs   one candidate, flattened
   Data/
-    JobTable.cs          job → role and job → raise spell
+    JobTable.cs          job to role, job to raise spell
     RoleType.cs
   Windows/
     ConfigWindow.cs      settings UI
@@ -221,6 +234,11 @@ HealAssist/
 
 ## Notes
 
-- Third-party plugins are not supported by Square Enix. Use at your own risk.
-- Action IDs are hard-coded and verified against XIVAPI, but the settings window lets you override
-  any of them without a rebuild if a patch ever changes one.
+Third party plugins are not supported by Square Enix. Use at your own risk.
+
+Action IDs are hard coded and were verified against XIVAPI, but the settings window lets you override
+any of them without a rebuild if a patch ever changes one.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

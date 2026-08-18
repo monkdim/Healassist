@@ -59,15 +59,15 @@ public static class JobTable
     /// <summary>Default resurrection action for each job that has one. Verified against XIVAPI.</summary>
     private static readonly Dictionary<uint, uint> RaiseActions = new()
     {
-        [6] = 125,     // CNJ — Raise
-        [24] = 125,    // WHM — Raise
-        [26] = 173,    // ACN — Resurrection
-        [27] = 173,    // SMN — Resurrection
-        [28] = 173,    // SCH — Resurrection
-        [33] = 3603,   // AST — Ascend
-        [35] = 7523,   // RDM — Verraise
-        [36] = 18317,  // BLU — Angel Whisper
-        [40] = 24287,  // SGE — Egeiro
+        [6] = 125,     // CNJ, Raise
+        [24] = 125,    // WHM, Raise
+        [26] = 173,    // ACN, Resurrection
+        [27] = 173,    // SMN, Resurrection
+        [28] = 173,    // SCH, Resurrection
+        [33] = 3603,   // AST, Ascend
+        [35] = 7523,   // RDM, Verraise
+        [36] = 18317,  // BLU, Angel Whisper
+        [40] = 24287,  // SGE, Egeiro
     };
 
     private static readonly Dictionary<uint, string> JobAbbreviations = new()
