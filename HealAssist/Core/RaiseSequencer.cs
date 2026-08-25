@@ -1,3 +1,4 @@
+using System.Numerics;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
 using HealAssist.Data;
@@ -31,6 +32,9 @@ public sealed class RaiseSequencer(Configuration config)
     private long deadlineMs;
     private string pendingName = string.Empty;
 
+    /// <summary>Entity to put the target cursor back on next tick, after Jolt has been sent.</summary>
+    private uint restoreTargetTo;
+
     public bool IsRunning => step != Step.Idle;
 
     /// <summary>
@@ -63,7 +67,7 @@ public sealed class RaiseSequencer(Configuration config)
             return true;
         }
 
-        if (config.RdmUseJolt && TryJoltNearestEnemy())
+        if (config.RdmUseJolt && TryJoltNearestEnemy(target))
         {
             Begin(target, "Jolt");
             return true;
@@ -83,6 +87,8 @@ public sealed class RaiseSequencer(Configuration config)
 
     public void Tick()
     {
+        RestoreTargetIfPending();
+
         if (step != Step.AwaitingInstantCast)
             return;
 
@@ -147,6 +153,23 @@ public sealed class RaiseSequencer(Configuration config)
         pendingName = string.Empty;
     }
 
+    /// <summary>
+    /// Puts the cursor back on the body one frame after Jolt was sent. A cast is bound to its
+    /// target the moment it starts, so Jolt still lands on the enemy while your cursor sits where
+    /// you actually want it.
+    /// </summary>
+    private void RestoreTargetIfPending()
+    {
+        if (restoreTargetTo == 0)
+            return;
+
+        var corpse = Svc.Objects.SearchByEntityId(restoreTargetTo);
+        restoreTargetTo = 0;
+
+        if (corpse is not null)
+            Svc.Targets.Target = corpse;
+    }
+
     private void Report(string message)
     {
         if (config.ChatFeedbackOnSuccess)
@@ -165,10 +188,13 @@ public sealed class RaiseSequencer(Configuration config)
     }
 
     /// <summary>
-    /// Jolt at the closest thing the game will actually let us hit. Asking the game whether the
-    /// action is usable covers range, hostility and targetability in one go.
+    /// Jolt the closest thing the game will actually let us hit. Asking the game whether the action
+    /// is usable covers range, hostility and targetability in one go.
+    ///
+    /// The enemy is targeted for real rather than passing a bare ID, because a targeted cast is the
+    /// path the game is guaranteed to accept. The cursor goes back to the body on the next tick.
     /// </summary>
-    private static bool TryJoltNearestEnemy()
+    private bool TryJoltNearestEnemy(PartyMemberInfo corpse)
     {
         var me = Svc.Me;
         if (me is null)
@@ -178,7 +204,7 @@ public sealed class RaiseSequencer(Configuration config)
         if (jolt == 0)
             return false;
 
-        var candidates = new List<(float Distance, uint EntityId)>();
+        var candidates = new List<(float Distance, IGameObject Enemy)>();
 
         foreach (var obj in Svc.Objects)
         {
@@ -186,18 +212,36 @@ public sealed class RaiseSequencer(Configuration config)
                 continue;
             if (obj is not IBattleChara enemy || enemy.CurrentHp == 0)
                 continue;
+            if (!Actions.CanUse(jolt, obj.EntityId))
+                continue;
 
-            candidates.Add((System.Numerics.Vector3.Distance(me.Position, obj.Position), obj.EntityId));
+            candidates.Add((Vector3.Distance(me.Position, obj.Position), obj));
         }
+
+        if (candidates.Count == 0)
+            return false;
 
         candidates.Sort((a, b) => a.Distance.CompareTo(b.Distance));
 
-        foreach (var (_, entityId) in candidates)
+        var previousTarget = Svc.Targets.Target;
+
+        foreach (var (_, enemy) in candidates)
         {
-            if (Actions.Use(jolt, entityId))
+            Svc.Targets.Target = enemy;
+
+            if (Actions.Use(jolt, enemy.EntityId))
+            {
+                // Restore straight away so a two line macro cannot fire its /ac line while the
+                // cursor is still on the enemy. The next tick repeats it as a cheap safety net in
+                // case anything else moves the target in between.
+                Svc.Targets.Target = corpse.GameObject;
+                restoreTargetTo = corpse.GameObject.EntityId;
                 return true;
+            }
         }
 
+        // Nothing took. Put the cursor back immediately rather than leaving it on an enemy.
+        Svc.Targets.Target = previousTarget;
         return false;
     }
 }

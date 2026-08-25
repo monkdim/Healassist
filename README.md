@@ -179,8 +179,12 @@ option enabled, since this is the plugin sending actions. The order it tries:
 5. None of the above worked, fall back to the plain ten second cast
 
 Jolt is preferred over Vercure because both cost the same global cooldown, but Jolt deals damage and
-builds mana rather than wasting it. **Your target never moves.** Actions are sent with an explicit
-target ID, so the plugin hits the enemy with Jolt while your cursor stays on the body.
+builds mana rather than wasting it.
+
+The enemy is targeted for the instant it takes to send Jolt, then your cursor snaps straight back to
+the body. A cast is bound to its target the moment it starts, so Jolt still lands on the enemy while
+you are already targeting the person you are about to raise. In practice you will not see the cursor
+move.
 
 The sequence gives up if the body disappears, you die, or the filler cast gets interrupted. The
 timeout is configurable and defaults to six seconds.

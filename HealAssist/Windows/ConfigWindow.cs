@@ -358,7 +358,8 @@ public sealed class ConfigWindow : Window, IDisposable
             v => Config.RdmUseJolt = v,
             "Jolt and Vercure both cost one global cooldown, but Jolt deals damage and builds mana\n"
           + "instead of wasting it. Vercure is used when nothing is in range.\n"
-          + "Your target stays on the body either way, the plugin does not move your cursor.");
+          + "The enemy is targeted for the instant it takes to send Jolt, then the cursor snaps\n"
+          + "back to the body. A cast is locked to its target once it starts, so Jolt still lands.");
 
         var timeout = Config.RdmSequenceTimeoutSeconds;
         ImGui.SetNextItemWidth(220f);
