@@ -8,12 +8,17 @@ using HealAssist.Windows;
 namespace HealAssist;
 
 /// <summary>Cached party state so the settings window can show a live preview without touching game memory.</summary>
-public sealed record PreviewSnapshot(PickResult Raise, PickResult Lowest, IReadOnlyList<PartyMemberInfo> Members)
+public sealed record PreviewSnapshot(
+    PickResult Raise,
+    PickResult Lowest,
+    IReadOnlyList<PartyMemberInfo> Members,
+    uint LocalJobId)
 {
     public static readonly PreviewSnapshot Empty = new(
         PickResult.Fail(PickFailure.NotLoggedIn),
         PickResult.Fail(PickFailure.NotLoggedIn),
-        []);
+        [],
+        0);
 }
 
 public sealed class Plugin : IDalamudPlugin
@@ -30,6 +35,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly ConfigWindow configWindow;
     private readonly HotkeyManager hotkeys;
     private readonly CommandRunner runner;
+    private readonly RaiseSequencer sequencer;
 
     private long nextPreviewTick;
 
@@ -48,7 +54,8 @@ public sealed class Plugin : IDalamudPlugin
 
         var scanner = new PartyScanner(Config);
         var picker = new TargetPicker(Config);
-        runner = new CommandRunner(Config, scanner, picker);
+        sequencer = new RaiseSequencer(Config);
+        runner = new CommandRunner(Config, scanner, picker, sequencer);
         hotkeys = new HotkeyManager(Config, runner);
 
         configWindow = new ConfigWindow(this, runner, picker, hotkeys);
@@ -133,6 +140,7 @@ public sealed class Plugin : IDalamudPlugin
         try
         {
             hotkeys.Update(framework);
+            sequencer.Tick();
 
             if (!configWindow.IsOpen)
                 return;
@@ -143,8 +151,8 @@ public sealed class Plugin : IDalamudPlugin
 
             nextPreviewTick = now + PreviewIntervalMs;
 
-            var (raise, lowest, members) = runner.Preview();
-            Preview = new PreviewSnapshot(raise, lowest, members);
+            var (raise, lowest, members, localJobId) = runner.Preview();
+            Preview = new PreviewSnapshot(raise, lowest, members, localJobId);
         }
         catch (Exception ex)
         {

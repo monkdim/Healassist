@@ -157,6 +157,37 @@ action for you is the kind of automation Square Enix prohibits, and third party 
 unsupported regardless. The macro route above gets you the same one button result without that.
 Your call.
 
+## Red Mage
+
+Verraise is a ten second cast, the slowest resurrection in the game. Dualcast makes the next spell
+instant, so the fast route is to spend one two second cast on anything and let Verraise ride the
+Dualcast it generates.
+
+| Route | Time to rez |
+| --- | --- |
+| Hard cast Verraise | 10.0s |
+| Jolt or Vercure, then Verraise | about 2.0s plus a GCD |
+| Swiftcast, then Verraise | instant |
+
+Turn on **Generate an instant cast before Verraise** under Settings, Raise. It needs the auto cast
+option enabled, since this is the plugin sending actions. The order it tries:
+
+1. Dualcast or Swiftcast already up, cast Verraise straight away
+2. Swiftcast off cooldown, use it, then Verraise
+3. Something attackable in range, Jolt it, then Verraise off the Dualcast
+4. Nothing attackable, Vercure yourself, then Verraise
+5. None of the above worked, fall back to the plain ten second cast
+
+Jolt is preferred over Vercure because both cost the same global cooldown, but Jolt deals damage and
+builds mana rather than wasting it. **Your target never moves.** Actions are sent with an explicit
+target ID, so the plugin hits the enemy with Jolt while your cursor stays on the body.
+
+The sequence gives up if the body disappears, you die, or the filler cast gets interrupted. The
+timeout is configurable and defaults to six seconds.
+
+Worth knowing: **Acceleration does not help here.** It only applies to Verthunder III, Veraero III
+and Impact, so it cannot make Verraise instant. Dualcast and Swiftcast are the only two options.
+
 ## Troubleshooting
 
 **HealAssist does not appear in the plugin installer.** Press the refresh icon in `/xlplugins`.

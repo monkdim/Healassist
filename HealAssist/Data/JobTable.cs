@@ -12,6 +12,25 @@ public static class JobTable
     /// <summary>Swiftcast, shared across all casters.</summary>
     public const uint SwiftcastActionId = 7561;
 
+    public const uint RedMageJobId = 35;
+
+    /// <summary>Base Jolt. Pass through the game's action upgrade to reach Jolt II or III.</summary>
+    public const uint JoltActionId = 7503;
+
+    /// <summary>Vercure, the self heal Red Mage falls back on when nothing is attackable.</summary>
+    public const uint VercureActionId = 7514;
+
+    /// <summary>
+    /// Statuses that make the next spell instant. Several IDs exist for the same buff because
+    /// Bozja, Variant dungeons and the Occult Crescent ship their own copies, and missing one
+    /// would make the plugin silently hard cast in exactly the content where that hurts most.
+    /// </summary>
+    public static readonly HashSet<uint> InstantCastStatusIds =
+    [
+        1249, 1378, 1393, 1798, 5438, // Dualcast
+        167, 1325, 1987,              // Swiftcast
+    ];
+
     private static readonly Dictionary<uint, RoleType> Roles = new()
     {
         // Tanks

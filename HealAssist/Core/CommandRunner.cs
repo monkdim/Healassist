@@ -6,7 +6,7 @@ namespace HealAssist.Core;
 /// <summary>
 /// Executes the two user-facing actions. Must be called on the framework thread.
 /// </summary>
-public sealed class CommandRunner(Configuration config, PartyScanner scanner, TargetPicker picker)
+public sealed class CommandRunner(Configuration config, PartyScanner scanner, TargetPicker picker, RaiseSequencer sequencer)
 {
     private const uint SwiftcastStatusId = 167;
 
@@ -26,7 +26,7 @@ public sealed class CommandRunner(Configuration config, PartyScanner scanner, Ta
 
         Svc.Targets.Target = result.Target.GameObject;
 
-        if (config.AutoCastRaise)
+        if (config.AutoCastRaise && !sequencer.TryBegin(result.Target))
             TryAutoCastRaise(result.Target);
 
         return Report(result, "Raise");
@@ -51,20 +51,25 @@ public sealed class CommandRunner(Configuration config, PartyScanner scanner, Ta
         return Report(result, "Lowest HP");
     }
 
-    /// <summary>Live preview for the settings window. Never changes your target.</summary>
-    public (PickResult Raise, PickResult Lowest, IReadOnlyList<PartyMemberInfo> Members) Preview()
+    /// <summary>
+    /// Live preview for the settings window. Never changes your target. The local job travels with
+    /// the snapshot because the settings window draws on the render thread, where reading the
+    /// object table throws.
+    /// </summary>
+    public (PickResult Raise, PickResult Lowest, IReadOnlyList<PartyMemberInfo> Members, uint LocalJobId) Preview()
     {
-        if (Svc.Me is null)
+        var me = Svc.Me;
+        if (me is null)
         {
             var none = PickResult.Fail(PickFailure.NotLoggedIn);
-            return (none, none, []);
+            return (none, none, [], 0);
         }
 
         // The preview scans the union of both commands' sources; the picker filters per command.
         var members = scanner.Scan(
             config.RaiseIncludeAlliance || config.LowestIncludeAlliance,
             config.RaiseIncludeNearby || config.LowestIncludeNearby);
-        return (picker.PickRaiseTarget(members), picker.PickLowestHpTarget(members), members);
+        return (picker.PickRaiseTarget(members), picker.PickLowestHpTarget(members), members, me.ClassJob.RowId);
     }
 
     private PickResult Report(PickResult result, string label)

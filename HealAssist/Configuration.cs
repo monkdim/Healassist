@@ -105,6 +105,18 @@ public sealed class Configuration : IPluginConfiguration
     /// <summary>When auto-casting, use Swiftcast first if it is off cooldown and you are not already swift.</summary>
     public bool AutoCastUseSwiftcast { get; set; }
 
+    /// <summary>
+    /// Red Mage only. Spend one short cast to generate Dualcast, then fire Verraise instantly,
+    /// which turns a ten second resurrection into roughly two.
+    /// </summary>
+    public bool RdmSmartRaise { get; set; }
+
+    /// <summary>Prefer Jolt over Vercure for the filler cast, so the global cooldown is not wasted.</summary>
+    public bool RdmUseJolt { get; set; } = true;
+
+    /// <summary>How long to keep trying to land the follow-up Verraise before giving up.</summary>
+    public float RdmSequenceTimeoutSeconds { get; set; } = 6f;
+
     /// <summary>Per-job overrides for the raise action ID, in case an ID ever changes.</summary>
     public Dictionary<uint, uint> RaiseActionOverrides { get; set; } = new();
 

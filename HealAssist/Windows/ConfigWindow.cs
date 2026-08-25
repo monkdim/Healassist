@@ -301,6 +301,8 @@ public sealed class ConfigWindow : Window, IDisposable
             v => Config.AutoCastUseSwiftcast = v,
             "Skipped if you already have the Swiftcast buff or it is on cooldown.");
 
+        DrawRedMageSection();
+
         if (ImGui.TreeNode("Raise spell IDs"))
         {
             ColoredWrapped(Muted, "Only touch these if a patch ever changes an action ID. Set one to 0 to go back to the built-in value.");
@@ -323,6 +325,50 @@ public sealed class ConfigWindow : Window, IDisposable
 
             ImGui.TreePop();
         }
+
+        ImGui.Unindent();
+        ImGui.EndDisabled();
+    }
+
+    /// <summary>
+    /// Red Mage gets its own section because Verraise is a ten second cast and Dualcast is the
+    /// only thing that fixes that.
+    /// </summary>
+    private void DrawRedMageSection()
+    {
+        var onRdm = plugin.Preview.LocalJobId == JobTable.RedMageJobId;
+
+        ImGui.Spacing();
+        ImGui.TextUnformatted(onRdm ? "Red Mage (you are on Red Mage)" : "Red Mage");
+        ColoredWrapped(Muted,
+            "Verraise takes ten seconds, the slowest resurrection in the game, but Dualcast makes "
+          + "the next spell instant. With this on, HealAssist spends one two second cast to generate "
+          + "Dualcast and then fires Verraise off it, which gets the raise out in about two seconds.");
+        ImGui.Spacing();
+
+        CheckboxSetting("Generate an instant cast before Verraise", Config.RdmSmartRaise,
+            v => Config.RdmSmartRaise = v,
+            "Order tried: existing Dualcast or Swiftcast, then Swiftcast, then a filler cast.\n"
+          + "If none of that works it falls back to the plain ten second cast.");
+
+        ImGui.BeginDisabled(!Config.RdmSmartRaise);
+        ImGui.Indent();
+
+        CheckboxSetting("Use Jolt as the filler when something is attackable", Config.RdmUseJolt,
+            v => Config.RdmUseJolt = v,
+            "Jolt and Vercure both cost one global cooldown, but Jolt deals damage and builds mana\n"
+          + "instead of wasting it. Vercure is used when nothing is in range.\n"
+          + "Your target stays on the body either way, the plugin does not move your cursor.");
+
+        var timeout = Config.RdmSequenceTimeoutSeconds;
+        ImGui.SetNextItemWidth(220f);
+        if (ImGui.SliderFloat("Give up after (seconds)", ref timeout, 2f, 15f, "%.0f"))
+        {
+            Config.RdmSequenceTimeoutSeconds = timeout;
+            Config.Save();
+        }
+        Hint("How long to keep trying to land Verraise after the filler cast.\nRaised if the body is\n"
+           + "gone, you die, or the cast gets interrupted.");
 
         ImGui.Unindent();
         ImGui.EndDisabled();
@@ -560,10 +606,10 @@ public sealed class ConfigWindow : Window, IDisposable
         ImGui.PopID();
     }
 
-    private static string CurrentRaiseSpellName()
+    private string CurrentRaiseSpellName()
     {
-        var jobId = Svc.Me?.ClassJob.RowId ?? 0;
-        return jobId switch
+        // Read from the cached snapshot, not the object table: this runs on the render thread.
+        return plugin.Preview.LocalJobId switch
         {
             6 or 24 => "Raise",
             26 or 27 or 28 => "Resurrection",
