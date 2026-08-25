@@ -157,6 +157,24 @@ action for you is the kind of automation Square Enix prohibits, and third party 
 unsupported regardless. The macro route above gets you the same one button result without that.
 Your call.
 
+## The Occult Crescent
+
+The phantom **Revive** is instant, reaches 30 yalms, and works on any Disciple of War or Magic
+regardless of your job. Its own tooltip says it also lands on targets carrying Resurrection
+Restriction, which no ordinary raise can touch. Wherever it is available it beats every job raise in
+the game, and it makes the whole Red Mage Dualcast dance below unnecessary.
+
+HealAssist tries it first and falls back silently everywhere it is not available. It does not track
+zones or phantom jobs, it just asks the game whether the action is usable, so it works the moment you
+have it slotted and stays out of the way when you do not.
+
+If you use the macro route rather than auto cast:
+
+```
+/harez
+/ac "Revive" <t>
+```
+
 ## Red Mage
 
 Verraise is a ten second cast, the slowest resurrection in the game. Dualcast makes the next spell

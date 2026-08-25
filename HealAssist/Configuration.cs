@@ -106,6 +106,12 @@ public sealed class Configuration : IPluginConfiguration
     public bool AutoCastUseSwiftcast { get; set; }
 
     /// <summary>
+    /// Use the Occult Crescent phantom Revive when the game says it is available. It is instant and
+    /// bypasses Resurrection Restriction, so it beats every job raise wherever it works.
+    /// </summary>
+    public bool PreferPhantomRevive { get; set; } = true;
+
+    /// <summary>
     /// Red Mage only. Spend one short cast to generate Dualcast, then fire Verraise instantly,
     /// which turns a ten second resurrection into roughly two.
     /// </summary>

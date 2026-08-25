@@ -14,6 +14,14 @@ public static class JobTable
 
     public const uint RedMageJobId = 35;
 
+    /// <summary>
+    /// The Occult Crescent phantom raise. It is instant, reaches 30y, and its own description says
+    /// it works on targets carrying Resurrection Restriction, which ordinary raises cannot touch.
+    /// Its job category is any Disciple of War or Magic, so it does not care what you are playing.
+    /// When this is available it beats every job raise in the game, Verraise most of all.
+    /// </summary>
+    public const uint PhantomReviveActionId = 41634;
+
     /// <summary>Base Jolt. Pass through the game's action upgrade to reach Jolt II or III.</summary>
     public const uint JoltActionId = 7503;
 

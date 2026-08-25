@@ -301,6 +301,12 @@ public sealed class ConfigWindow : Window, IDisposable
             v => Config.AutoCastUseSwiftcast = v,
             "Skipped if you already have the Swiftcast buff or it is on cooldown.");
 
+        CheckboxSetting("Prefer the phantom Revive when the game allows it", Config.PreferPhantomRevive,
+            v => Config.PreferPhantomRevive = v,
+            "The Occult Crescent phantom raise. Instant, 30y, works on any job, and it is the only\n"
+          + "raise that lands on targets carrying Resurrection Restriction.\n"
+          + "Tried before anything job specific, and silently skipped everywhere it is unavailable.");
+
         DrawRedMageSection();
 
         if (ImGui.TreeNode("Raise spell IDs"))
@@ -564,6 +570,11 @@ public sealed class ConfigWindow : Window, IDisposable
             "Heal the lowest HP party member",
             "/halow\n/ac \"Cure II\" <t>",
             "Any single-target heal works. Benediction, Essential Dignity, Tetragrammaton, Haima, and so on.");
+
+        DrawMacroBlock(
+            "Raise in the Occult Crescent",
+            "/harez\n/ac \"Revive\" <t>",
+            "The phantom raise is instant and is the only one that works through Resurrection Restriction.");
 
         DrawMacroBlock(
             "Just move the target, cast it yourself",

@@ -26,8 +26,12 @@ public sealed class CommandRunner(Configuration config, PartyScanner scanner, Ta
 
         Svc.Targets.Target = result.Target.GameObject;
 
-        if (config.AutoCastRaise && !sequencer.TryBegin(result.Target))
+        if (config.AutoCastRaise
+            && !TryPhantomRevive(result.Target)
+            && !sequencer.TryBegin(result.Target))
+        {
             TryAutoCastRaise(result.Target);
+        }
 
         return Report(result, "Raise");
     }
@@ -90,6 +94,26 @@ public sealed class CommandRunner(Configuration config, PartyScanner scanner, Ta
     // -- Optional auto-cast ------------------------------------------------
     // Off by default. Everything above only moves your target cursor; this is the one place
     // HealAssist presses a button on your behalf.
+
+    /// <summary>
+    /// Phantom Revive is instant and works on any job, so wherever the game accepts it there is no
+    /// reason to cast anything else. Asking the game whether it is usable is also how we detect
+    /// being in the Occult Crescent with it slotted, without tracking zones or phantom jobs.
+    /// </summary>
+    private bool TryPhantomRevive(PartyMemberInfo target)
+    {
+        if (!config.PreferPhantomRevive)
+            return false;
+
+        var revive = Actions.Adjust(JobTable.PhantomReviveActionId);
+        if (!Actions.Use(revive, target.GameObject.EntityId))
+            return false;
+
+        if (config.ChatFeedbackOnSuccess)
+            Svc.Chat.Print($"[HealAssist] phantom Revive on {target.Name}");
+
+        return true;
+    }
 
     private void TryAutoCastRaise(PartyMemberInfo target)
     {
