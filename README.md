@@ -41,9 +41,27 @@ If you would rather remember one command, `/healassist rez` and `/healassist low
 
 ## Macros
 
+There are two setups, and which one you want depends on a single setting.
+
+**Auto cast off (the default).** The plugin only moves your target and your macro casts the spell,
+so every raise macro is two lines. This is the recommended setup.
+
+**Auto cast on.** The plugin sends the spell itself, including the phantom Revive and the Red Mage
+Dualcast setup where those apply, so your raise macro is one line:
+
+```
+/harez
+```
+
+Do not add an `/ac` line to the raise macro in that mode. The plugin has already cast by the time
+that line runs, so it either throws an error or fires a second raise at somebody who is already on
+their way up. There is no separate Red Mage macro to make: `/harez` covers every job.
+
+The **Macros** tab in the settings window shows whichever set applies to your current settings, with
+a Copy button, and fills in the correct spell name for the job you are playing.
+
 Make these under **User Macros** in game, give them an icon, then drag them onto a hotbar or
-crossbar slot. The **Macros** tab in the settings window has all of them with a Copy button, and it
-fills in the correct spell name for whatever job you are currently playing.
+crossbar slot.
 
 **Raise the priority target**
 

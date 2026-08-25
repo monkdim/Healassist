@@ -545,41 +545,76 @@ public sealed class ConfigWindow : Window, IDisposable
 
     private void DrawMacroTab()
     {
-        ImGui.TextWrapped(
-            "This is the recommended setup. HealAssist moves your target, the next macro line casts the "
-          + "spell, so the game handles the cast exactly as if you had clicked the party member yourself.");
-        ImGui.Spacing();
-        ImGui.TextWrapped(
-            "Make a macro in-game (User Macros), paste one of these in, give it an icon, then drag it "
-          + "onto a hotbar or crossbar slot.");
-        ImGui.Separator();
-
         var raiseSpell = CurrentRaiseSpellName();
 
-        DrawMacroBlock(
-            "Raise the priority target",
-            $"/harez\n/ac \"{raiseSpell}\" <t>",
-            "Swap the spell name for your job if you swap jobs, or make one macro per job.");
+        if (Config.AutoCastRaise)
+        {
+            // With auto cast on the plugin already sends the spell, so a second /ac line is at best
+            // a wasted press and at worst fires a redundant cast at somebody already coming up.
+            Colored(Good, "Auto cast is on, so your raise macro is one line.");
+            ImGui.Spacing();
+            ImGui.TextWrapped(
+                "HealAssist picks the target and sends the spell itself, including the phantom Revive "
+              + "and the Red Mage Dualcast setup where those apply. Do not add an /ac line to the raise "
+              + "macro: the plugin has already cast by the time that line runs, so it just throws an "
+              + "error or fires a second raise at someone who is already on their way up.");
+            ImGui.Separator();
 
-        DrawMacroBlock(
-            "Raise with Swiftcast",
-            $"/harez\n/ac \"Swiftcast\" <wait.1>\n/ac \"{raiseSpell}\" <t>",
-            "Macros cannot queue, so the wait is there to give Swiftcast a beat to apply.");
+            DrawMacroBlock(
+                "Raise (everything is handled for you)",
+                "/harez",
+                "One line. Works on every job, including Red Mage and the Occult Crescent.");
 
-        DrawMacroBlock(
-            "Heal the lowest HP party member",
-            "/halow\n/ac \"Cure II\" <t>",
-            "Any single-target heal works. Benediction, Essential Dignity, Tetragrammaton, Haima, and so on.");
+            DrawMacroBlock(
+                "Heal the lowest HP player",
+                "/halow\n/ac \"Cure II\" <t>",
+                "Auto cast only covers raises, so this one still needs the spell line.");
+        }
+        else
+        {
+            ImGui.TextWrapped(
+                "HealAssist moves your target, the next macro line casts the spell, so the game handles "
+              + "the cast exactly as if you had clicked the party member yourself.");
+            ImGui.Spacing();
+            ImGui.TextWrapped(
+                "Make a macro in-game (User Macros), paste one of these in, give it an icon, then drag it "
+              + "onto a hotbar or crossbar slot.");
+            ImGui.Separator();
 
-        DrawMacroBlock(
-            "Raise in the Occult Crescent",
-            "/harez\n/ac \"Revive\" <t>",
-            "The phantom raise is instant and is the only one that works through Resurrection Restriction.");
+            DrawMacroBlock(
+                "Raise the priority target",
+                $"/harez\n/ac \"{raiseSpell}\" <t>",
+                "Swap the spell name for your job if you swap jobs, or make one macro per job.");
 
-        DrawMacroBlock(
-            "Just move the target, cast it yourself",
-            "/harez",
-            "Useful if you would rather keep full control of which spell goes out.");
+            DrawMacroBlock(
+                "Raise with Swiftcast",
+                $"/harez\n/ac \"Swiftcast\" <wait.1>\n/ac \"{raiseSpell}\" <t>",
+                "Macros cannot queue, so the wait is there to give Swiftcast a beat to apply.");
+
+            DrawMacroBlock(
+                "Heal the lowest HP player",
+                "/halow\n/ac \"Cure II\" <t>",
+                "Any single-target heal works. Benediction, Essential Dignity, Tetragrammaton, Haima, and so on.");
+
+            DrawMacroBlock(
+                "Raise in the Occult Crescent",
+                "/harez\n/ac \"Revive\" <t>",
+                "The phantom raise is instant and is the only one that works through Resurrection Restriction.");
+
+            if (plugin.Preview.LocalJobId == JobTable.RedMageJobId)
+            {
+                DrawMacroBlock(
+                    "Red Mage, prep Dualcast yourself",
+                    $"/harez\n/ac \"Vercure\" <me>",
+                    "Press once to target and start Vercure, then press your Verraise. Turning on auto\n"
+                  + "cast plus the Red Mage option does this in one press and uses Jolt instead.");
+            }
+
+            DrawMacroBlock(
+                "Just move the target, cast it yourself",
+                "/harez",
+                "Useful if you would rather keep full control of which spell goes out.");
+        }
 
         ImGui.Separator();
         ImGui.TextUnformatted("Getting these onto a controller");
