@@ -5,6 +5,17 @@ on:
     branches:
       - main
   pull_request:
+
+  # Dalamud ships on its own schedule and this plugin compiles against whatever it has shipped, so the build
+  # can start failing without a line of this repository changing. Nothing here would notice: the last run was
+  # against whatever Dalamud looked like the last time somebody pushed, which for a plugin that is finished
+  # and working can be a month ago and several client updates behind.
+  #
+  # A weekly run turns that into a red tick on a morning nobody was expecting one, which is the whole point.
+  # The first sign of trouble should not be a user whose game will not load the plugin.
+  schedule:
+    - cron: '0 10 * * 1'
+
   workflow_dispatch:
 
 concurrency:
