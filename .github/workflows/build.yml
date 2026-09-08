@@ -1,0 +1,91 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+  # Dalamud ships on its own schedule and this plugin compiles against whatever it has shipped, so the build
+  # can start failing without a line of this repository changing. Nothing here would notice: the last run was
+  # against whatever Dalamud looked like the last time somebody pushed, which for a plugin that is finished
+  # and working can be a month ago and several client updates behind.
+  #
+  # A weekly run turns that into a red tick on a morning nobody was expecting one, which is the whole point.
+  # The first sign of trouble should not be a user whose game will not load the plugin.
+  schedule:
+    - cron: '0 10 * * 1'
+
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Download Dalamud
+        shell: pwsh
+        run: |
+          # Dalamud.NET.Sdk resolves its reference assemblies from this path by default,
+          # which is where XIVLauncher puts them on a real install.
+          $hooks = "$env:AppData\XIVLauncher\addon\Hooks\dev"
+          New-Item -ItemType Directory -Force -Path $hooks | Out-Null
+          # Retried, because this is one unauthenticated fetch of somebody else's file and it does fail: this
+          # very build died here on a connection closed mid transfer and reported it as a build failure. That
+          # matters more now there is a weekly run, which exists to say "the plugin no longer compiles" and is
+          # worth nothing if a red tick can also mean "the download blipped".
+          $ErrorActionPreference = 'Stop'
+          for ($i = 1; $i -le 5; ++$i) {
+            try {
+              Invoke-WebRequest -Uri https://goatcorp.github.io/dalamud-distrib/latest.zip -OutFile dalamud.zip
+              break
+            } catch {
+              if ($i -eq 5) { throw }
+              Write-Host "Dalamud download failed ($($_.Exception.Message)), attempt $i of 5"
+              Start-Sleep -Seconds (5 * $i)
+            }
+          }
+
+          Expand-Archive -Path dalamud.zip -DestinationPath $hooks -Force
+          $version = Invoke-RestMethod -Uri https://goatcorp.github.io/dalamud-distrib/version
+          Write-Host "Building against Dalamud $($version.AssemblyVersion)"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -c Release --nologo
+
+      - name: Stage a drop-in plugin folder
+        shell: pwsh
+        run: |
+          # DalamudPackager leaves a latest.zip next to the manifest. Unpack it so the
+          # downloaded artifact is directly loadable as a Dev Plugin Location instead of
+          # being a zip inside a zip.
+          $out = "HealAssist/bin/Release/HealAssist"
+          New-Item -ItemType Directory -Force -Path staging | Out-Null
+          if (Test-Path "$out/latest.zip") {
+            Expand-Archive -Path "$out/latest.zip" -DestinationPath staging -Force
+          } else {
+            Copy-Item "$out/*" staging -Recurse -Force
+          }
+          Get-ChildItem -Recurse staging | ForEach-Object { Write-Host $_.FullName }
+
+      - name: Upload plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: HealAssist
+          path: staging/*
+          if-no-files-found: error
