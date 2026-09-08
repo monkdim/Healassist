@@ -42,7 +42,22 @@ jobs:
           # which is where XIVLauncher puts them on a real install.
           $hooks = "$env:AppData\XIVLauncher\addon\Hooks\dev"
           New-Item -ItemType Directory -Force -Path $hooks | Out-Null
-          Invoke-WebRequest -Uri https://goatcorp.github.io/dalamud-distrib/latest.zip -OutFile dalamud.zip
+          # Retried, because this is one unauthenticated fetch of somebody else's file and it does fail: this
+          # very build died here on a connection closed mid transfer and reported it as a build failure. That
+          # matters more now there is a weekly run, which exists to say "the plugin no longer compiles" and is
+          # worth nothing if a red tick can also mean "the download blipped".
+          $ErrorActionPreference = 'Stop'
+          for ($i = 1; $i -le 5; ++$i) {
+            try {
+              Invoke-WebRequest -Uri https://goatcorp.github.io/dalamud-distrib/latest.zip -OutFile dalamud.zip
+              break
+            } catch {
+              if ($i -eq 5) { throw }
+              Write-Host "Dalamud download failed ($($_.Exception.Message)), attempt $i of 5"
+              Start-Sleep -Seconds (5 * $i)
+            }
+          }
+
           Expand-Archive -Path dalamud.zip -DestinationPath $hooks -Force
           $version = Invoke-RestMethod -Uri https://goatcorp.github.io/dalamud-distrib/version
           Write-Host "Building against Dalamud $($version.AssemblyVersion)"
