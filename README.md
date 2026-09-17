@@ -264,11 +264,19 @@ installer.
 
 Two workflows, both building against the current Dalamud release on a Windows runner.
 
-`build.yml` runs on pull requests and uploads the built plugin as a run artifact. Handy for testing a
-branch: download it from the Actions tab, unzip it somewhere permanent, and point Dev Plugin
-Locations at that folder.
+`build.yml` runs on pull requests, on pushes to `main`, and on demand from the Actions tab. It uploads
+the built plugin as a run artifact, which is a convenient way to test a branch: download it from the
+Actions tab, unzip it somewhere permanent, and point Dev Plugin Locations at that folder.
 
-`release.yml` runs on version tags and on pushes to `main`. It builds, generates `repo.json` from
+It also runs once a week on a schedule, with nothing changed. The plugin compiles against whatever
+Dalamud has shipped, and Dalamud ships on its own schedule, so the build can start failing without a
+line of this repository changing. A weekly run makes the first sign of that a red tick rather than a
+user whose game will not load the plugin. The Dalamud download is retried a few times before the job
+gives up, because it is one unauthenticated fetch of somebody else's file and a dropped connection
+reported as a build failure is how everybody learns to ignore a canary.
+
+`release.yml` runs on version tags, on pushes to `main`, and on pushes to the `claude/**` development
+branch, which is currently this repository's default. It builds, generates `repo.json` from
 `HealAssist.json` plus the `<Version>` in the csproj, checks the manifest is a flat array of plugin
 entries, and publishes it alongside `latest.zip` on a `v{version}` GitHub release. The download links
 inside the manifest use the `/releases/latest/download/` redirect, which is what makes the repository
@@ -277,7 +285,7 @@ URL permanent.
 To cut a new version, bump `<Version>` in `HealAssist.csproj` and push a matching tag:
 
 ```
-git tag v1.2.0.0 && git push origin v1.2.0.0
+git tag v1.3.2.0 && git push origin v1.3.2.0
 ```
 
 The release job refuses to publish if the tag and the csproj version disagree, so the release name
@@ -294,6 +302,8 @@ HealAssist/
     PartyScanner.cs      reads party, alliance and nearby players into a snapshot
     TargetPicker.cs      grouping, priority ranking, selection rules
     CommandRunner.cs     sets the target, optional auto cast
+    RaiseSequencer.cs    the Red Mage Dualcast route, and the phantom Revive check
+    Actions.cs           thin wrapper over the game's action manager
     HotkeyManager.cs     optional in game hotkeys
     PartyMemberInfo.cs   one candidate, flattened
   Data/
