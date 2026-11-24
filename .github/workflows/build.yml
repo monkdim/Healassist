@@ -65,7 +65,10 @@ jobs:
       - name: Restore
         run: dotnet restore
 
-      - name: Build
+      - name: Check Blackest Night targeting
+        run: dotnet run --project Tests/TargetPicker/TargetPicker.csproj -c Release
+
+      - name: Build plugin
         run: dotnet build --no-restore -c Release --nologo
 
       - name: Stage a drop-in plugin folder

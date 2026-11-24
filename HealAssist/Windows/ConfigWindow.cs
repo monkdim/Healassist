@@ -547,6 +547,14 @@ public sealed class ConfigWindow : Window, IDisposable
     {
         var raiseSpell = CurrentRaiseSpellName();
 
+        DrawMacroBlock(
+            "The Blackest Night — party only",
+            "/micon \"The Blackest Night\"\n/hatbn",
+            "Dark Knight: shields the lowest-HP-percentage eligible living party member below 80% HP. If nobody qualifies, shields you instead. "
+          + "Never selects alliance members or nearby strangers, regardless of Lowest HP settings. "
+          + "Press once per use; do not add an /ac line. If the spell is unavailable, nothing is cast.");
+        ImGui.Separator();
+
         if (Config.AutoCastRaise)
         {
             // With auto cast on the plugin already sends the spell, so a second /ac line is at best

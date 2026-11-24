@@ -42,7 +42,10 @@ jobs:
           Invoke-WebRequest -Uri https://goatcorp.github.io/dalamud-distrib/latest.zip -OutFile dalamud.zip
           Expand-Archive -Path dalamud.zip -DestinationPath $hooks -Force
 
-      - name: Build
+      - name: Check Blackest Night targeting
+        run: dotnet run --project Tests/TargetPicker/TargetPicker.csproj -c Release
+
+      - name: Build plugin
         run: dotnet build -c Release --nologo
 
       - name: Generate repository manifest
@@ -61,7 +64,7 @@ jobs:
             Name                = $manifest.Name
             Punchline           = $manifest.Punchline
             Description         = $manifest.Description
-            Changelog           = ""
+            Changelog           = "New /hatbn macro: The Blackest Night on the lowest-HP eligible party member below 80%, otherwise yourself. Never targets alliance members or nearby players. Available in the Macros tab."
             InternalName        = $manifest.InternalName
             AssemblyVersion     = $version
             RepoUrl             = $manifest.RepoUrl

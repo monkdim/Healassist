@@ -27,6 +27,7 @@ public sealed class Plugin : IDalamudPlugin
     private const string CommandShort = "/ha";
     private const string CommandRaise = "/harez";
     private const string CommandLowest = "/halow";
+    private const string CommandBlackestNight = "/hatbn";
 
     private const long PreviewIntervalMs = 150;
 
@@ -61,10 +62,11 @@ public sealed class Plugin : IDalamudPlugin
         configWindow = new ConfigWindow(this, runner, picker, hotkeys);
         windowSystem.AddWindow(configWindow);
 
-        AddCommand(CommandMain, "Open HealAssist settings. Also accepts: rez, low.");
+        AddCommand(CommandMain, "Open HealAssist settings. Also accepts: rez, low, tbn.");
         AddCommand(CommandShort, "Short form of /healassist.");
         AddCommand(CommandRaise, "Target the highest-priority raisable dead party member.");
         AddCommand(CommandLowest, "Target the party member with the lowest HP percentage.");
+        AddCommand(CommandBlackestNight, "Shield the lowest-HP eligible party member below 80%, otherwise yourself.");
 
         Svc.PluginInterface.UiBuilder.Draw += windowSystem.Draw;
         Svc.PluginInterface.UiBuilder.OpenConfigUi += OpenConfig;
@@ -104,6 +106,9 @@ public sealed class Plugin : IDalamudPlugin
     {
         switch (command)
         {
+            case CommandBlackestNight:
+                runner.UseBlackestNight();
+                return;
             case CommandRaise:
                 runner.TargetRaise();
                 return;
@@ -124,13 +129,16 @@ public sealed class Plugin : IDalamudPlugin
             case "res":
                 runner.TargetRaise();
                 return;
+            case "tbn":
+                runner.UseBlackestNight();
+                return;
             case "low":
             case "lowest":
             case "lowhp":
                 runner.TargetLowestHp();
                 return;
             default:
-                Svc.Chat.Print($"[HealAssist] Unknown option. Try: {CommandMain}, {CommandRaise}, {CommandLowest}");
+                Svc.Chat.Print($"[HealAssist] Unknown option. Try: {CommandMain}, {CommandRaise}, {CommandLowest}, {CommandBlackestNight}");
                 return;
         }
     }

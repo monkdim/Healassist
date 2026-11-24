@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../HealAssist/Core/TargetPicker.cs" Link="TargetPicker.cs" />
+    <Compile Include="../../HealAssist/Core/PartyMemberInfo.cs" Link="PartyMemberInfo.cs" />
+    <Compile Include="../../HealAssist/Configuration.cs" Link="Configuration.cs" />
+    <Compile Include="../../HealAssist/Data/RoleType.cs" Link="RoleType.cs" />
+    <Compile Include="../../HealAssist/Data/JobTable.cs" Link="JobTable.cs" />
+  </ItemGroup>
+</Project>

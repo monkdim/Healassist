@@ -35,11 +35,26 @@ That URL always points at the newest release, so you never need to change it.
 | --- | --- |
 | `/harez` | Target the highest priority raisable dead player |
 | `/halow` | Target the player with the lowest HP percentage |
+| `/hatbn` | Target and cast The Blackest Night on the lowest-HP eligible living party member (Dark Knight only) |
 | `/healassist` | Open the settings window (`/ha` works too) |
 
 If you would rather remember one command, `/healassist rez` and `/healassist low` do the same thing.
 
 ## Macros
+
+**The Blackest Night — party only**
+
+```
+/micon "The Blackest Night"
+/hatbn
+```
+
+This option is also available with a Copy button in the Macros tab. It chooses the lowest HP
+percentage among eligible living party members below 80% HP, including yourself. If nobody qualifies,
+it shields you instead. Exactly 80% does not count as below the threshold. It never
+includes other alliance parties or nearby strangers, even if those are enabled for `/halow`.
+`/healassist tbn` is an alias. The command casts once on an explicit party target; do not add an
+`/ac` line. If nobody qualifies, or the spell is unavailable, it does not cast on your old target.
 
 There are two setups, and which one you want depends on a single setting.
 

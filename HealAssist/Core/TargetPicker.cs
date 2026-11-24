@@ -95,6 +95,26 @@ public sealed class TargetPicker(Configuration config)
             : PickResult.Found(hurt[0]);
     }
 
+    // This action never inherits the broader healing command's source, self or HP filters.
+    public PickResult PickBlackestNightTarget(IReadOnlyList<PartyMemberInfo> members,
+        Func<PartyMemberInfo, bool> canUse)
+    {
+        var target = members
+            .Where(m => m.Source == MemberSource.Party && !m.IsDead && m.MaxHp > 0 && m.HpPercent < 80f)
+            .OrderBy(m => m.HpPercent)
+            .ThenBy(m => m.CurrentHp)
+            .ThenBy(m => m.PartyIndex)
+            .ThenBy(m => m.Distance)
+            .FirstOrDefault(canUse);
+
+        target ??= members.FirstOrDefault(m => m.Source == MemberSource.Party && m.IsSelf
+            && !m.IsDead && m.MaxHp > 0 && canUse(m));
+
+        return target is null
+            ? PickResult.Fail(PickFailure.NobodyInRange)
+            : PickResult.Found(target);
+    }
+
     private bool IsSourceAllowed(MemberSource source, bool forRaise) => source switch
     {
         MemberSource.Party => true,

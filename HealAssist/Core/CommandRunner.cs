@@ -4,11 +4,13 @@ using HealAssist.Data;
 namespace HealAssist.Core;
 
 /// <summary>
-/// Executes the two user-facing actions. Must be called on the framework thread.
+/// Executes user-facing targeting and spell commands. Must be called on the framework thread.
 /// </summary>
 public sealed class CommandRunner(Configuration config, PartyScanner scanner, TargetPicker picker, RaiseSequencer sequencer)
 {
     private const uint SwiftcastStatusId = 167;
+    private const uint BlackestNightActionId = 7393;
+    private const uint DarkKnightJobId = 32;
 
     /// <summary>Return value of <c>GetActionStatus</c> meaning "you may use this right now".</summary>
     private const uint ActionUsable = 0;
@@ -53,6 +55,41 @@ public sealed class CommandRunner(Configuration config, PartyScanner scanner, Ta
 
         Svc.Targets.Target = result.Target.GameObject;
         return Report(result, "Lowest HP");
+    }
+
+    public void UseBlackestNight()
+    {
+        var me = Svc.Me;
+        if (me is null)
+        {
+            Report(PickResult.Fail(PickFailure.NotLoggedIn), "The Blackest Night");
+            return;
+        }
+
+        if (me.ClassJob.RowId != DarkKnightJobId)
+        {
+            if (config.ChatFeedbackOnFailure)
+                Svc.Chat.Print("[HealAssist] The Blackest Night requires Dark Knight.");
+            return;
+        }
+
+        var result = picker.PickBlackestNightTarget(
+            scanner.Scan(includeAlliance: false, includeNearby: false),
+            member => Actions.CanUse(BlackestNightActionId, member.GameObject.EntityId));
+
+        // Send an explicit entity ID instead of relying on an /ac <t> macro line, which could
+        // otherwise cast on an old non-party target when no party member qualifies.
+        if (result.Target is { } target)
+        {
+            if (!Actions.Use(BlackestNightActionId, target.GameObject.EntityId))
+            {
+                if (config.ChatFeedbackOnFailure)
+                    Svc.Chat.Print("[HealAssist] The Blackest Night could not be used. No fallback target was used.");
+                return;
+            }
+            Svc.Targets.Target = target.GameObject;
+        }
+        Report(result, "The Blackest Night");
     }
 
     /// <summary>
